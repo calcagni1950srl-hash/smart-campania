@@ -236,3 +236,13 @@ VERSIONE 11.6.3 — BUDGET RISPETTATO
 - Protezione dell’unico piatto di carne e dell’unico piatto di pesce.
 - Ricalcolo della lista della spesa dopo ogni sostituzione.
 - Nuove voci “Budget rispettato” e “Sostituzioni per il budget”.
+
+
+VERSIONE 11.6.4 — BUDGET E FRUTTA CORRETTI
+- La frutta viene aggiunta alla fine della pianificazione.
+- Garantita una porzione di frutta al giorno quando la categoria è selezionata.
+- La frutta alterna pranzo e cena.
+- Se il menu supera il budget, vengono prima ridotte gradualmente le porzioni.
+- Se necessario, vengono rimossi solo piatti aggiuntivi dai pasti più ricchi.
+- L’unico piatto di carne e l’unico piatto di pesce restano protetti.
+- La lista della spesa viene sempre ricalcolata sul menu definitivo.
