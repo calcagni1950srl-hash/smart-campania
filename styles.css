@@ -1322,3 +1322,59 @@ main.card{
     margin-bottom:8px;
   }
 }
+
+
+/* Versione 13.5: gestione dispensa unificata */
+.unified-pantry-box{
+  padding:14px;
+}
+
+.pantry-main-action{
+  width:100%;
+  margin-top:10px;
+  min-height:46px;
+}
+
+.pantry-success-box{
+  padding:14px;
+}
+
+.pantry-update-summary{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  margin-top:10px;
+}
+
+.pantry-update-summary span{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:54px;
+  padding:7px;
+  border-radius:9px;
+  background:rgba(255,255,255,.72);
+  font-size:.72rem;
+  text-align:center;
+}
+
+.pantry-update-summary b{
+  font-size:1rem;
+}
+
+.informative-only{
+  background:#f7f9f7;
+}
+
+@media(max-width:520px){
+  .pantry-update-summary{
+    grid-template-columns:1fr;
+  }
+
+  .pantry-update-summary span{
+    min-height:42px;
+    flex-direction:row;
+    gap:5px;
+  }
+}

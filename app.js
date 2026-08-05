@@ -3356,6 +3356,8 @@ function buildPlan(){
     pantryCommitted:false,
     pantryCommitDate:null,
     pantryCommitDetails:[],
+    pantryAddedDetails:[],
+    pantryUpdateSummary:null,
     meals:result.meals,
     shopping:result.shopping,
     spent:result.spent,
@@ -3764,6 +3766,99 @@ function replaceDay(dayIndex){
 }
 
 
+
+function addPlanToPantry(){
+  if(!currentPlan) return;
+
+  if(currentPlan.pantryCommitted){
+    alert("La dispensa è già stata aggiornata per questo menu.");
+    return;
+  }
+
+  const quantities=loadPantryQuantities();
+  const pantrySet=new Set(pantryItems());
+  const usedDetails=[];
+  const addedDetails=[];
+
+  // Scala le quantità realmente utilizzate dalla vecchia dispensa.
+  Object.entries(currentPlan.usedFromPantry||{})
+    .filter(([,qty])=>(parseFloat(qty)||0)>0)
+    .forEach(([key,qty])=>{
+      const before=Math.max(0,parseFloat(quantities[key])||0);
+      const usedQty=Math.min(before,Math.max(0,parseFloat(qty)||0));
+      const after=Math.max(0,before-usedQty);
+
+      if(after>0){
+        quantities[key]=after;
+        pantrySet.add(key);
+      }else{
+        delete quantities[key];
+        pantrySet.delete(key);
+      }
+
+      if(usedQty>0){
+        usedDetails.push({
+          key,
+          name:PRODUCTS[key]?.name||key,
+          before,
+          used:usedQty,
+          after,
+          unit:PRODUCTS[key]?.unit||""
+        });
+      }
+    });
+
+  // Aggiunge alla dispensa le quantità residue della nuova spesa.
+  const leftovers=(currentPlan.shopping||[])
+    .filter(item=>(parseFloat(item.leftoverQty)||0)>0);
+
+  leftovers.forEach(item=>{
+    const qty=Math.max(0,parseFloat(item.leftoverQty)||0);
+    if(!qty) return;
+
+    quantities[item.key]=(parseFloat(quantities[item.key])||0)+qty;
+    pantrySet.add(item.key);
+
+    addedDetails.push({
+      key:item.key,
+      name:item.name||PRODUCTS[item.key]?.name||item.key,
+      added:qty,
+      unit:item.unit||PRODUCTS[item.key]?.unit||""
+    });
+  });
+
+  if(!usedDetails.length && !addedDetails.length){
+    alert("Non ci sono quantità da aggiornare o scorte residue da aggiungere.");
+    return;
+  }
+
+  savePantryQuantities(quantities);
+
+  document.querySelectorAll("[data-pantry]").forEach(box=>{
+    box.checked=pantrySet.has(box.dataset.pantry);
+  });
+
+  currentPlan.pantry=[...pantrySet];
+  currentPlan.pantryCommitted=true;
+  currentPlan.pantryCommitDate=new Date().toLocaleString("it-IT");
+  currentPlan.pantryCommitDetails=usedDetails;
+  currentPlan.pantryAddedDetails=addedDetails;
+  currentPlan.pantryUpdateSummary={
+    usedCount:usedDetails.length,
+    addedCount:addedDetails.length,
+    totalProducts:new Set([
+      ...usedDetails.map(item=>item.key),
+      ...addedDetails.map(item=>item.key)
+    ]).size
+  };
+
+  localStorage.setItem("smartCampaniaV2Plan",JSON.stringify(currentPlan));
+  saveSettings();
+  renderPantryQuantityInputs();
+  updatePantryCount();
+  renderPlan();
+}
+
 function commitPantryUsage(){
   if(!currentPlan) return;
 
@@ -3863,26 +3958,50 @@ function undoPantryUsage(){
 
 function pantryCommitStatus(plan){
   if(plan.pantryCommitted){
-    return `<div class="commit-box committed">
-      <strong>Dispensa aggiornata</strong>
-      <div class="section-note">Quantità scalate il ${plan.pantryCommitDate||""}.</div>
-      <button type="button" class="secondary" onclick="undoPantryUsage()">Annulla aggiornamento</button>
+    const summary=plan.pantryUpdateSummary||{
+      usedCount:(plan.pantryCommitDetails||[]).length,
+      addedCount:(plan.pantryAddedDetails||[]).length,
+      totalProducts:new Set([
+        ...(plan.pantryCommitDetails||[]).map(item=>item.key),
+        ...(plan.pantryAddedDetails||[]).map(item=>item.key)
+      ]).size
+    };
+
+    return `<div class="commit-box committed pantry-success-box">
+      <strong>✅ Dispensa aggiornata</strong>
+      <div class="section-note">
+        Aggiornamento eseguito il ${plan.pantryCommitDate||""}.
+      </div>
+      <div class="pantry-update-summary">
+        <span><b>${summary.addedCount||0}</b> scorte aggiunte</span>
+        <span><b>${summary.usedCount||0}</b> prodotti scalati</span>
+        <span><b>${summary.totalProducts||0}</b> prodotti aggiornati</span>
+      </div>
     </div>`;
   }
 
-  const hasUsage=Object.values(plan.usedFromPantry||{}).some(v=>(parseFloat(v)||0)>0);
+  const hasUsage=Object.values(plan.usedFromPantry||{})
+    .some(value=>(parseFloat(value)||0)>0);
+  const hasLeftovers=(plan.shopping||[])
+    .some(item=>(parseFloat(item.leftoverQty)||0)>0);
 
-  if(!hasUsage){
+  if(!hasUsage && !hasLeftovers){
     return `<div class="commit-box">
-      <strong>Nessuna quantità da scalare</strong>
-      <div class="section-note">Il menu non utilizza prodotti con quantità registrate in dispensa.</div>
+      <strong>Dispensa già allineata</strong>
+      <div class="section-note">
+        Questo menu non usa quantità registrate e non genera scorte residue.
+      </div>
     </div>`;
   }
 
-  return `<div class="commit-box">
-    <strong>Conferma questo menu</strong>
-    <div class="section-note">Scala dalla dispensa le quantità realmente utilizzate durante la settimana.</div>
-    <button type="button" class="primary" onclick="commitPantryUsage()">Conferma e aggiorna dispensa</button>
+  return `<div class="commit-box unified-pantry-box">
+    <strong>Aggiorna la dispensa</strong>
+    <div class="section-note">
+      Con un solo passaggio vengono scalati gli alimenti consumati e aggiunte le scorte residue della spesa.
+    </div>
+    <button type="button" class="primary pantry-main-action" onclick="addPlanToPantry()">
+      ➕ Aggiungi alla dispensa
+    </button>
   </div>`;
 }
 
@@ -3963,10 +4082,11 @@ function renderPlan(){
           </div>
         `).join("")}
       </div>`:""}
-    <div class="carry-box">
-      <strong>Usa le scorte la prossima settimana</strong>
-      <div class="section-note">Premendo il pulsante, gli articoli residui vengono aggiunti automaticamente alla dispensa salvata.</div>
-      <button type="button" class="secondary" onclick="carryLeftoversToPantry()">Aggiungi scorte alla dispensa</button>
+    <div class="carry-box informative-only">
+      <strong>Scorte disponibili per la prossima settimana</strong>
+      <div class="section-note">
+        Queste quantità saranno aggiunte usando l’unico pulsante “Aggiungi alla dispensa” presente nel riepilogo.
+      </div>
     </div>`
     : `<div class="empty">Nessuna scorta residua significativa.</div>`;
 

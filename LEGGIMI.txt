@@ -359,3 +359,13 @@ VERSIONE 13.4 — CHEF AI NUTRIZIONISTA
 - Non elimina l’unica porzione già necessaria di carne, pesce, legumi o uova.
 - Aggiunto punteggio Nutrizionista 0–100 e riepilogo delle correzioni.
 - Le indicazioni sono euristiche per la pianificazione dei pasti e non sostituiscono il parere di un professionista sanitario.
+
+
+VERSIONE 13.5 — DISPENSA UNIFICATA
+- Rimane un solo pulsante “Aggiungi alla dispensa”.
+- Il pulsante scala gli alimenti consumati dalla dispensa esistente.
+- Nello stesso passaggio aggiunge le scorte residue della nuova spesa.
+- Eliminato il pulsante duplicato dai Dettagli avanzati / Scorte.
+- La sezione Scorte resta consultabile ma diventa solo informativa.
+- Dopo l’operazione compare un riepilogo con scorte aggiunte e prodotti scalati.
+- Il pulsante non può essere usato due volte sullo stesso menu.
