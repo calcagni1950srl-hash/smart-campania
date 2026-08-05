@@ -185,3 +185,11 @@ CORREZIONE VERSIONE 11.1 — ORIGINE PREZZI VISIBILE
 - Ogni prodotto mostra una targhetta evidente “Prezzo reale/offerta” oppure “Prezzo medio stimato”.
 - Aggiunto il dettaglio della fonte e della validità.
 - I menu salvati dalle versioni precedenti vengono ricalcolati automaticamente.
+
+
+VERSIONE 11.2 — DATABASE PREZZI VERIFICATO
+- Inseriti esclusivamente prezzi supportati da fonti ufficiali.
+- Aggiunta copertura per ogni supermercato.
+- Aggiunte data di controllo e data di verifica per ogni prezzo.
+- I supermercati non ancora integrati continuano a usare i prezzi medi interni.
+- Nessun prezzo viene inventato o ricavato per approssimazione.

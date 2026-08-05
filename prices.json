@@ -1,11 +1,21 @@
 {
-  "schema_version": 1,
-  "updated_at": "2026-08-05T10:00:00+02:00",
+  "schema_version": 2,
+  "updated_at": "2026-08-05T15:15:00+02:00",
   "area": "Maddaloni-Caserta",
-  "notes": "Prima integrazione sperimentale. Le offerte scadute vengono ignorate automaticamente.",
+  "policy": {
+    "verified_only": true,
+    "fallback": "average_internal_price",
+    "expired_offers_are_ignored": true,
+    "note": "Il database contiene soltanto prezzi pubblicati da fonti ufficiali e verificabili."
+  },
   "markets": {
     "lidl": {
       "display_name": "Lidl",
+      "last_checked": "2026-08-05",
+      "coverage": {
+        "verified_active_products": 2,
+        "status": "iniziale"
+      },
       "source_name": "Lidl Italia",
       "products": {
         "salsiccia": {
@@ -17,7 +27,8 @@
           "valid_from": "2026-07-30",
           "valid_to": "2026-08-05",
           "label": "Salsiccette con vitello",
-          "source_url": "https://www.lidl.it/p/salsiccette-con-vitello/p11140713"
+          "source_url": "https://www.lidl.it/p/salsiccette-con-vitello/p11140713",
+          "verified_at": "2026-08-05"
         },
         "banana": {
           "price": 0.98,
@@ -27,21 +38,61 @@
           "source_type": "real_price",
           "valid_from": "2026-07-04",
           "valid_to": null,
-          "label": "Banane sfuse",
-          "source_url": "https://www.lidl.it/"
-        },
-        "patate": {
-          "price": 1.99,
-          "pack": 2000,
-          "unit": "g",
-          "price_per_kg": 1.0,
-          "source_type": "expired_offer_example",
-          "valid_from": "2026-07-27",
-          "valid_to": "2026-07-29",
-          "label": "Patate novelle",
-          "source_url": "https://www.lidl.it/"
+          "label": "Banane sfuse - prezzo fisso",
+          "source_url": "https://www.lidl.it/c/offerte-settimanali-kw-28/",
+          "verified_at": "2026-08-05"
         }
       }
+    },
+    "conad": {
+      "display_name": "Conad",
+      "last_checked": null,
+      "coverage": {
+        "verified_active_products": 0,
+        "status": "da integrare"
+      },
+      "source_name": "Conad",
+      "products": {}
+    },
+    "eurospin": {
+      "display_name": "Eurospin",
+      "last_checked": null,
+      "coverage": {
+        "verified_active_products": 0,
+        "status": "da integrare"
+      },
+      "source_name": "Eurospin",
+      "products": {}
+    },
+    "sole365": {
+      "display_name": "Sole 365",
+      "last_checked": null,
+      "coverage": {
+        "verified_active_products": 0,
+        "status": "da integrare"
+      },
+      "source_name": "Sole 365",
+      "products": {}
+    },
+    "piccolo": {
+      "display_name": "Supermercati Piccolo",
+      "last_checked": null,
+      "coverage": {
+        "verified_active_products": 0,
+        "status": "da integrare"
+      },
+      "source_name": "Supermercati Piccolo",
+      "products": {}
+    },
+    "deco": {
+      "display_name": "Decò",
+      "last_checked": null,
+      "coverage": {
+        "verified_active_products": 0,
+        "status": "da integrare"
+      },
+      "source_name": "Decò",
+      "products": {}
     }
   }
 }
