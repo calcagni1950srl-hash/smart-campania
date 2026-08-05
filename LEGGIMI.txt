@@ -275,3 +275,14 @@ VERSIONE 11.6.7 — BUDGET INCREMENTALE
 - Le ricette restano diverse finché esistono alternative.
 - La frutta viene scelta in base al costo marginale e compare una volta al giorno.
 - Se il menu normale sfora, il fallback economico viene applicato automaticamente.
+
+
+VERSIONE 12.0 — PANIERE BUDGET
+- Il budget viene considerato prima della scelta delle ricette.
+- Ogni ricetta viene valutata sul costo reale che aggiunge al carrello.
+- Forte preferenza per ingredienti e confezioni già presenti.
+- Massimo due varietà di frutta nella settimana.
+- Carne e pesce vengono assegnati ai primi spazi disponibili per i secondi.
+- Pranzo e cena rispettano esattamente le modalità selezionate.
+- Ricette diverse finché il database offre alternative compatibili.
+- Il numero di ingredienti diversi nel paniere è visibile nel riepilogo.
