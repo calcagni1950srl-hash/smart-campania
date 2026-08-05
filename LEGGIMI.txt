@@ -265,3 +265,13 @@ VERSIONE 11.6.6 — STRUTTURA PASTI CORRETTA
 - Le ricette vengono scelte senza duplicati finché il database offre alternative.
 - Migliorata la distanza tra piatti simili.
 - Controllo finale automatico della struttura pranzo/cena.
+
+
+VERSIONE 11.6.7 — BUDGET INCREMENTALE
+- Il menu economico sceglie ogni ricetta in base al costo che aggiunge realmente al carrello.
+- Vengono privilegiati ingredienti e confezioni già presenti nella spesa.
+- La struttura scelta per pranzo e cena resta invariata.
+- Carne e pesce vengono assegnati ai primi due spazi disponibili per i secondi.
+- Le ricette restano diverse finché esistono alternative.
+- La frutta viene scelta in base al costo marginale e compare una volta al giorno.
+- Se il menu normale sfora, il fallback economico viene applicato automaticamente.

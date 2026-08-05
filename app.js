@@ -2137,54 +2137,56 @@ function buildBudgetFirstMenu(context){
 }
 
 function forceBudgetFirstFallback(context,budget){
-  let meals=buildBudgetFirstMenu(context);
-  let portionScale=1;
-  let result=calculateShopping(
-    meals,
+  const scales=[1,0.95,0.90,0.85,0.80,0.75,0.70,0.65,0.60,0.55,0.50,0.45];
+  let best=null;
+
+  for(const portionScale of scales){
+    const meals=buildStructuredBudgetMenu(context,portionScale);
+    const result=calculateShopping(
+      meals,
+      context.people,
+      context.supermarket,
+      context.pantry||[],
+      portionScale
+    );
+
+    const candidate={
+      meals,
+      shopping:result.shopping,
+      spent:result.spent,
+      usedFromPantry:result.usedFromPantry||{},
+      portionScale,
+      withinBudget:result.spent<=budget,
+      budgetFallback:true
+    };
+
+    if(!best || candidate.spent<best.spent) best=candidate;
+    if(candidate.withinBudget) return candidate;
+  }
+
+  // Ultima semplificazione: mantiene la struttura scelta ma toglie
+  // soltanto i contorni, che sono componenti aggiuntivi.
+  const simplified=cloneWeek(best.meals);
+  simplified.forEach(day=>{
+    day.lunch=day.lunch.filter(recipe=>recipe.type!=="contorno");
+    day.dinner=day.dinner.filter(recipe=>recipe.type!=="contorno");
+  });
+
+  const finalResult=calculateShopping(
+    simplified,
     context.people,
     context.supermarket,
     context.pantry||[],
-    portionScale
+    best.portionScale
   );
 
-  const scales=[0.95,0.90,0.85,0.80,0.75,0.70,0.65,0.60,0.55,0.50];
-
-  for(const scale of scales){
-    if(result.spent<=budget) break;
-
-    portionScale=scale;
-    result=calculateShopping(
-      meals,
-      context.people,
-      context.supermarket,
-      context.pantry||[],
-      portionScale
-    );
-  }
-
-  // Ultimo adattamento: elimina soltanto i contorni aggiuntivi.
-  if(result.spent>budget){
-    meals.forEach(day=>{
-      day.lunch=day.lunch.filter(r=>r.type!=="contorno");
-      day.dinner=day.dinner.filter(r=>r.type!=="contorno");
-    });
-
-    result=calculateShopping(
-      meals,
-      context.people,
-      context.supermarket,
-      context.pantry||[],
-      portionScale
-    );
-  }
-
   return {
-    meals,
-    shopping:result.shopping,
-    spent:result.spent,
-    usedFromPantry:result.usedFromPantry||{},
-    portionScale,
-    withinBudget:result.spent<=budget,
+    meals:simplified,
+    shopping:finalResult.shopping,
+    spent:finalResult.spent,
+    usedFromPantry:finalResult.usedFromPantry||{},
+    portionScale:best.portionScale,
+    withinBudget:finalResult.spent<=budget,
     budgetFallback:true
   };
 }
@@ -2207,130 +2209,176 @@ function mealAllowsType(mode,type){
   return true;
 }
 
-function uniqueBudgetSequence(type,count,context,preferredFamilies=[]){
-  if(count<=0) return [];
 
-  const pool=RECIPES
-    .filter(recipe=>
-      recipe.type===type &&
-      recipeAllowed(recipe,context.cats,context.style,context.season,context.prefs)
-    )
-    .sort((a,b)=>{
-      const costA=recipeCost(a,context.people,context.supermarket,1);
-      const costB=recipeCost(b,context.people,context.supermarket,1);
-      return costA-costB;
-    });
-
-  if(!pool.length) return [];
-
-  const chosen=[];
-  const usedIds=new Set();
-  const familyUse={};
-
-  for(let index=0;index<count;index++){
-    let candidates=pool.filter(recipe=>!usedIds.has(recipe.id));
-
-    if(type==="secondo" && preferredFamilies.length){
-      const desired=preferredFamilies[index%preferredFamilies.length];
-      const matching=candidates.filter(recipe=>recipeFamily(recipe)===desired);
-      if(matching.length) candidates=matching;
-    }
-
-    candidates.sort((a,b)=>{
-      const recentA=chosen.slice(-3).some(previous=>recipeSimilarity(a,previous)>=0.72)?1:0;
-      const recentB=chosen.slice(-3).some(previous=>recipeSimilarity(b,previous)>=0.72)?1:0;
-      const familyA=recipeFamily(a);
-      const familyB=recipeFamily(b);
-      const familyPenaltyA=(familyUse[familyA]||0)*2;
-      const familyPenaltyB=(familyUse[familyB]||0)*2;
-      const costA=recipeCost(a,context.people,context.supermarket,1);
-      const costB=recipeCost(b,context.people,context.supermarket,1);
-
-      return (recentA*8+familyPenaltyA+costA)-
-             (recentB*8+familyPenaltyB+costB);
-    });
-
-    let recipe=candidates[0];
-
-    // Solo se il database non contiene abbastanza ricette uniche,
-    // riutilizza quella meno recente.
-    if(!recipe){
-      recipe=[...pool].sort((a,b)=>{
-        const lastA=chosen.map(r=>r.id).lastIndexOf(a.id);
-        const lastB=chosen.map(r=>r.id).lastIndexOf(b.id);
-        return lastA-lastB;
-      })[0];
-    }
-
-    chosen.push(recipe);
-    usedIds.add(recipe.id);
-    const family=recipeFamily(recipe);
-    familyUse[family]=(familyUse[family]||0)+1;
-  }
-
-  return chosen;
+function emptyWeek(){
+  return DAYS.map(day=>({day,lunch:[],dinner:[]}));
 }
 
-function buildStructuredBudgetMenu(context){
-  const lunchRequirements=mealModeRequirements(context.lunch);
-  const dinnerRequirements=mealModeRequirements(context.dinner);
+function cloneWeek(meals){
+  return meals.map(day=>({
+    day:day.day,
+    lunch:[...day.lunch],
+    dinner:[...day.dinner]
+  }));
+}
 
-  const firstCount=
-    (lunchRequirements.first?7:0)+
-    (dinnerRequirements.first?7:0);
+function totalShoppingCostForWeek(meals,context,portionScale=1){
+  return calculateShopping(
+    meals,
+    context.people,
+    context.supermarket,
+    context.pantry||[],
+    portionScale
+  ).spent;
+}
 
-  const secondCount=
-    (lunchRequirements.second?7:0)+
-    (dinnerRequirements.second?7:0);
+function marginalRecipeCost(meals,slot,candidate,context,portionScale=1){
+  const before=totalShoppingCostForWeek(meals,context,portionScale);
+  const test=cloneWeek(meals);
+  test[slot.dayIndex][slot.mealKey].push(candidate);
+  const after=totalShoppingCostForWeek(test,context,portionScale);
+  return Math.max(0,after-before);
+}
 
-  const sideCount=
-    (lunchRequirements.side?7:0)+
-    (dinnerRequirements.side?7:0);
+function structuredMealSlots(context){
+  const slots=[];
+  const lunchReq=mealModeRequirements(context.lunch);
+  const dinnerReq=mealModeRequirements(context.dinner);
 
-  const firsts=uniqueBudgetSequence("primo",firstCount,context);
-  const seconds=uniqueBudgetSequence(
-    "secondo",
-    secondCount,
-    context,
-    ["carne","pesce","vegetariano","carne","pesce","vegetariano"]
-  );
-  const sides=uniqueBudgetSequence("contorno",sideCount,context);
-
-  const fruitPool=context.cats.includes("frutta")
-    ? buildFruitSequence(7,context.season,context.cats,context.style,context.prefs,context.pantry||[])
-    : [];
-
-  let firstIndex=0;
-  let secondIndex=0;
-  let sideIndex=0;
-
-  return DAYS.map((day,dayIndex)=>{
-    const lunch=[];
-    const dinner=[];
-
-    if(!lunchRequirements.outside){
-      if(lunchRequirements.first && firsts[firstIndex]) lunch.push(firsts[firstIndex++]);
-      if(lunchRequirements.second && seconds[secondIndex]) lunch.push(seconds[secondIndex++]);
-      if(lunchRequirements.side && sides[sideIndex]) lunch.push(sides[sideIndex++]);
+  DAYS.forEach((day,dayIndex)=>{
+    if(!lunchReq.outside){
+      if(lunchReq.first) slots.push({dayIndex,mealKey:"lunch",type:"primo"});
+      if(lunchReq.second) slots.push({dayIndex,mealKey:"lunch",type:"secondo"});
+      if(lunchReq.side) slots.push({dayIndex,mealKey:"lunch",type:"contorno"});
     }
 
-    if(!dinnerRequirements.outside){
-      if(dinnerRequirements.first && firsts[firstIndex]) dinner.push(firsts[firstIndex++]);
-      if(dinnerRequirements.second && seconds[secondIndex]) dinner.push(seconds[secondIndex++]);
-      if(dinnerRequirements.side && sides[sideIndex]) dinner.push(sides[sideIndex++]);
+    if(!dinnerReq.outside){
+      if(dinnerReq.first) slots.push({dayIndex,mealKey:"dinner",type:"primo"});
+      if(dinnerReq.second) slots.push({dayIndex,mealKey:"dinner",type:"secondo"});
+      if(dinnerReq.side) slots.push({dayIndex,mealKey:"dinner",type:"contorno"});
     }
-
-    if(fruitPool.length){
-      const fruit=fruitPool[dayIndex%fruitPool.length];
-      const target=dayIndex%2===0 ? lunch : dinner;
-      const fallback=target===lunch ? dinner : lunch;
-
-      if(target.length) target.push(fruit);
-      else if(fallback.length) fallback.push(fruit);
-    }
-
-    return {day,lunch,dinner};
   });
+
+  // Prima i secondi: così carne e pesce sono garantiti senza alterare la struttura.
+  const order={secondo:0,primo:1,contorno:2};
+  return slots.sort((a,b)=>order[a.type]-order[b.type] || a.dayIndex-b.dayIndex);
+}
+
+function candidateRecipesForSlot(slot,context){
+  return RECIPES.filter(recipe=>
+    recipe.type===slot.type &&
+    recipeAllowed(recipe,context.cats,context.style,context.season,context.prefs)
+  );
+}
+
+function chooseIncrementalRecipe(meals,slot,context,state,forcedFamily=null){
+  let pool=candidateRecipesForSlot(slot,context);
+
+  if(forcedFamily){
+    const familyPool=pool.filter(recipe=>recipeFamily(recipe)===forcedFamily);
+    if(familyPool.length) pool=familyPool;
+  }
+
+  if(!pool.length) return null;
+
+  const unused=pool.filter(recipe=>!state.usedIds.has(recipe.id));
+  const candidates=unused.length ? unused : pool;
+
+  return [...candidates].sort((a,b)=>{
+    const marginalA=marginalRecipeCost(meals,slot,a,context,state.portionScale);
+    const marginalB=marginalRecipeCost(meals,slot,b,context,state.portionScale);
+
+    const similarA=state.recent.slice(-4)
+      .reduce((sum,prev)=>sum+recipeSimilarity(a,prev),0);
+    const similarB=state.recent.slice(-4)
+      .reduce((sum,prev)=>sum+recipeSimilarity(b,prev),0);
+
+    const familyA=recipeFamily(a);
+    const familyB=recipeFamily(b);
+    const familyPenaltyA=(state.familyUse[familyA]||0)*0.35;
+    const familyPenaltyB=(state.familyUse[familyB]||0)*0.35;
+
+    // Il costo marginale domina; varietà e somiglianza sono correttivi.
+    return (marginalA + similarA*1.6 + familyPenaltyA) -
+           (marginalB + similarB*1.6 + familyPenaltyB);
+  })[0]||null;
+}
+
+function addDailyFruitIncrementally(meals,context,state){
+  if(!context.cats.includes("frutta")) return meals;
+
+  const fruitPool=RECIPES.filter(recipe=>
+    recipe.type==="frutta" &&
+    (context.season==="inverno" || recipe.season.includes("estate")) &&
+    recipeRespectsPreferences(recipe,context.prefs)
+  );
+
+  if(!fruitPool.length) return meals;
+
+  DAYS.forEach((day,dayIndex)=>{
+    const mealKey=dayIndex%2===0 ? "lunch" : "dinner";
+    const fallback=mealKey==="lunch" ? "dinner" : "lunch";
+    const target=meals[dayIndex][mealKey].length ? mealKey : fallback;
+    if(!meals[dayIndex][target].length) return;
+
+    const slot={dayIndex,mealKey:target,type:"frutta"};
+    const unused=fruitPool.filter(recipe=>!state.usedFruitIds.has(recipe.id));
+    const candidates=unused.length ? unused : fruitPool;
+
+    const fruit=[...candidates].sort((a,b)=>
+      marginalRecipeCost(meals,slot,a,context,state.portionScale) -
+      marginalRecipeCost(meals,slot,b,context,state.portionScale)
+    )[0];
+
+    if(fruit){
+      meals[dayIndex][target].push(fruit);
+      state.usedFruitIds.add(fruit.id);
+    }
+  });
+
+  return meals;
+}
+
+function buildStructuredBudgetMenu(context,portionScale=1){
+  const meals=emptyWeek();
+  const slots=structuredMealSlots(context);
+  const secondSlots=slots.filter(slot=>slot.type==="secondo");
+
+  const state={
+    usedIds:new Set(),
+    usedFruitIds:new Set(),
+    recent:[],
+    familyUse:{},
+    portionScale
+  };
+
+  let secondIndex=0;
+
+  slots.forEach(slot=>{
+    let forcedFamily=null;
+
+    if(slot.type==="secondo"){
+      if(secondIndex===0) forcedFamily="carne";
+      else if(secondIndex===1) forcedFamily="pesce";
+      secondIndex++;
+    }
+
+    const recipe=chooseIncrementalRecipe(
+      meals,slot,context,state,forcedFamily
+    );
+
+    if(!recipe) return;
+
+    meals[slot.dayIndex][slot.mealKey].push(recipe);
+    state.usedIds.add(recipe.id);
+    state.recent.push(recipe);
+
+    const family=recipeFamily(recipe);
+    state.familyUse[family]=(state.familyUse[family]||0)+1;
+  });
+
+  addDailyFruitIncrementally(meals,context,state);
+  return meals;
 }
 
 function menuRespectsSelectedModes(meals,lunchMode,dinnerMode){
@@ -2493,7 +2541,10 @@ function buildPlan(){
 
   // Controllo definitivo: nessun primo, secondo o contorno
   // può finire in un pasto che non lo prevede.
-  if(!menuRespectsSelectedModes(optimized.meals,lunch,dinner)){
+  if(
+    !menuRespectsSelectedModes(optimized.meals,lunch,dinner) ||
+    optimized.spent>budget
+  ){
     const structured=forceBudgetFirstFallback(finalContext,budget);
     optimized.meals=structured.meals;
     optimized.shopping=structured.shopping;
@@ -2503,6 +2554,9 @@ function buildPlan(){
     optimized.withinBudget=structured.withinBudget;
     optimized.budgetFallback=true;
   }
+
+  // Stato finale calcolato sul costo realmente mostrato.
+  optimized.withinBudget=optimized.spent<=budget;
 
   currentPlan={
     id:Date.now(),
