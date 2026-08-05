@@ -1,0 +1,20 @@
+SMART CAMPANIA BUDGET PRO - PACCHETTO COMPLETO
+
+Questo archivio contiene:
+- tutti i file dell'app versione 13.8;
+- icon-192.png;
+- icon-512.png;
+- favicon.ico;
+- manifest.json;
+- index.html già aggiornato.
+
+COME AGGIORNARE GITHUB
+1. Apri il repository GitHub.
+2. Elimina o sostituisci i vecchi file con quelli presenti in questo archivio.
+3. Carica tutti i file nella cartella principale del repository.
+4. Conferma con Commit changes.
+5. Attendi 1-2 minuti.
+6. Sul telefono elimina il vecchio collegamento dalla Home.
+7. Apri il sito da Chrome e scegli “Aggiungi alla schermata Home”.
+
+La nuova icona verrà usata dal collegamento.
