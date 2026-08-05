@@ -219,3 +219,12 @@ VERSIONE 11.6.1 — PRIMO BLOCCO CARNI
 - Garantito almeno un secondo di carne a settimana.
 - Garantito almeno un secondo di pesce a settimana.
 - Aggiunto controllo nel riepilogo.
+
+
+VERSIONE 11.6.2 — PIANIFICATORE SETTIMANALE
+- Carne e pesce vengono controllati dopo l’ottimizzazione del budget.
+- Se il tipo di pasto non prevede un secondo, il motore lo inserisce in due cene distinte.
+- Ricalcolo della lista della spesa sul menu definitivo.
+- Eliminazione delle ricette identiche ripetute, quando esistono alternative compatibili.
+- Maggiore distanza tra ricette molto simili.
+- Nuovo controllo “Ricette identiche ripetute” nel riepilogo.

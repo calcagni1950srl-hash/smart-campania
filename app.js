@@ -1668,6 +1668,7 @@ function rebalanceSimilarDays(meals,plan){
 }
 
 
+
 function hasWeeklySecondFamily(meals,family){
   return meals.some(day=>
     [...day.lunch,...day.dinner].some(
@@ -1676,63 +1677,164 @@ function hasWeeklySecondFamily(meals,family){
   );
 }
 
-function enforceMinimumMeatAndFish(meals,context){
-  const families=["carne","pesce"];
-  const usedIds=new Set(
+function weeklyRecipeIds(meals){
+  return new Set(
     meals.flatMap(day=>[...day.lunch,...day.dinner]).map(recipe=>recipe.id)
   );
+}
 
-  families.forEach(family=>{
-    if(hasWeeklySecondFamily(meals,family)) return;
+function familySecondCandidates(family,context,usedIds=new Set()){
+  const strict=RECIPES.filter(recipe=>
+    recipe.type==="secondo" &&
+    recipeFamily(recipe)===family &&
+    recipeAllowed(recipe,context.cats,context.style,context.season,context.prefs)
+  );
 
-    const candidates=RECIPES.filter(recipe=>
-      recipe.type==="secondo" &&
-      recipeFamily(recipe)===family &&
-      recipeAllowed(recipe,context.cats,context.style,context.season,context.prefs)
-    ).filter(recipe=>!usedIds.has(recipe.id));
+  const relaxed=RECIPES.filter(recipe=>{
+    if(recipe.type!=="secondo" || recipeFamily(recipe)!==family) return false;
+    const seasonOk=context.season==="inverno" || recipe.season.includes("estate");
+    const styleOk=context.style==="veloce"
+      ? recipe.style.includes("veloce")
+      : context.style==="gourmet"
+        ? recipe.style.includes("gourmet")
+        : recipe.style.includes("normale");
+    return seasonOk && styleOk && recipeRespectsPreferences(recipe,context.prefs);
+  });
 
-    const replacement=candidates.sort((a,b)=>{
-      const scoreA=pantryPreferenceScore(a,context.pantry||[]);
-      const scoreB=pantryPreferenceScore(b,context.pantry||[]);
-      return scoreB-scoreA || Math.random()-.5;
-    })[0];
+  const pool=strict.length ? strict : relaxed;
 
-    if(!replacement) return;
+  return [...pool]
+    .filter(recipe=>!usedIds.has(recipe.id))
+    .sort((a,b)=>{
+      const pantryA=pantryPreferenceScore(a,context.pantry||[]);
+      const pantryB=pantryPreferenceScore(b,context.pantry||[]);
+      const recentA=longTermRecentRecipeIds().has(a.id)?1:0;
+      const recentB=longTermRecentRecipeIds().has(b.id)?1:0;
+      return (pantryB-recentB*3)-(pantryA-recentA*3) || Math.random()-.5;
+    });
+}
 
-    let target=null;
+function mealMainRecipes(meal){
+  return meal.filter(recipe=>recipe.type!=="frutta");
+}
 
-    for(let dayIndex=0;dayIndex<meals.length && !target;dayIndex++){
-      for(const mealKey of ["dinner","lunch"]){
-        const secondIndex=meals[dayIndex][mealKey].findIndex(
-          recipe=>recipe.type==="secondo"
-        );
-        if(secondIndex>=0){
-          target={dayIndex,mealKey,secondIndex};
-          break;
-        }
-      }
+function chooseFamilyTarget(meals,family,blockedDays=new Set()){
+  // Preferisce cene di giorni diversi, senza un secondo della stessa famiglia.
+  const preferredOrder=[1,4,2,5,0,3,6];
+
+  for(const dayIndex of preferredOrder){
+    if(blockedDays.has(dayIndex)) continue;
+
+    for(const mealKey of ["dinner","lunch"]){
+      const meal=meals[dayIndex][mealKey];
+      if(!meal.length) continue;
+      if(meal.some(recipe=>recipe.type==="secondo" && recipeFamily(recipe)===family)) continue;
+
+      const secondIndex=meal.findIndex(recipe=>recipe.type==="secondo");
+      return {dayIndex,mealKey,secondIndex};
     }
+  }
 
-    if(target){
-      meals[target.dayIndex][target.mealKey][target.secondIndex]=replacement;
-    }else{
-      const dayIndex=meals.findIndex(day=>day.dinner.length>0);
-      if(dayIndex>=0){
-        const fruitIndex=meals[dayIndex].dinner.findIndex(
-          recipe=>recipe.type==="frutta"
-        );
-        if(fruitIndex>=0){
-          meals[dayIndex].dinner.splice(fruitIndex,0,replacement);
+  return null;
+}
+
+function placeGuaranteedSecond(meals,recipe,target){
+  const meal=meals[target.dayIndex][target.mealKey];
+
+  if(target.secondIndex>=0){
+    meal[target.secondIndex]=recipe;
+    return;
+  }
+
+  // Inserisce il secondo prima del contorno/frutta, mantenendo leggibile il pasto.
+  const insertIndex=meal.findIndex(item=>
+    item.type==="contorno" || item.type==="frutta"
+  );
+
+  if(insertIndex>=0) meal.splice(insertIndex,0,recipe);
+  else meal.push(recipe);
+}
+
+function removeExactWeeklyDuplicates(meals,context){
+  const used=new Set();
+  const recent=[];
+
+  meals.forEach((day,dayIndex)=>{
+    ["lunch","dinner"].forEach(mealKey=>{
+      day[mealKey].forEach((recipe,index)=>{
+        if(recipe.type==="frutta") return;
+
+        const repeated=used.has(recipe.id);
+        const tooSimilar=recent.slice(-4).some(prev=>recipeSimilarity(recipe,prev)>=0.84);
+
+        if(!repeated && !tooSimilar){
+          used.add(recipe.id);
+          recent.push(recipe);
+          return;
+        }
+
+        const alternatives=candidatePoolForRecipe(recipe,context)
+          .filter(candidate=>!used.has(candidate.id))
+          .filter(candidate=>recent.slice(-4).every(prev=>recipeSimilarity(candidate,prev)<0.68))
+          .sort((a,b)=>
+            similarityPenalty(a,recent,6)-similarityPenalty(b,recent,6)
+          );
+
+        const replacement=alternatives[0];
+        if(replacement){
+          day[mealKey][index]=replacement;
+          used.add(replacement.id);
+          recent.push(replacement);
         }else{
-          meals[dayIndex].dinner.push(replacement);
+          used.add(recipe.id);
+          recent.push(recipe);
         }
-      }
-    }
-
-    usedIds.add(replacement.id);
+      });
+    });
   });
 
   return meals;
+}
+
+function enforceWeeklyStructure(meals,context){
+  const usedIds=weeklyRecipeIds(meals);
+  const familyDays=new Set();
+
+  for(const family of ["carne","pesce"]){
+    if(hasWeeklySecondFamily(meals,family)){
+      meals.forEach((day,index)=>{
+        if([...day.lunch,...day.dinner].some(
+          recipe=>recipe.type==="secondo" && recipeFamily(recipe)===family
+        )) familyDays.add(index);
+      });
+      continue;
+    }
+
+    const recipe=familySecondCandidates(family,context,usedIds)[0];
+    if(!recipe) continue;
+
+    const target=chooseFamilyTarget(meals,family,familyDays);
+    if(!target) continue;
+
+    placeGuaranteedSecond(meals,recipe,target);
+    usedIds.add(recipe.id);
+    familyDays.add(target.dayIndex);
+  }
+
+  return removeExactWeeklyDuplicates(meals,context);
+}
+
+function weeklyStructureStatus(meals){
+  return {
+    meat:hasWeeklySecondFamily(meals,"carne"),
+    fish:hasWeeklySecondFamily(meals,"pesce"),
+    duplicateIds:(()=>{
+      const ids=meals.flatMap(day=>[...day.lunch,...day.dinner])
+        .filter(recipe=>recipe.type!=="frutta")
+        .map(recipe=>recipe.id);
+      return ids.length-new Set(ids).size;
+    })()
+  };
 }
 
 function buildPlan(){
@@ -1842,8 +1944,19 @@ function buildPlan(){
   const urgencyOrderedMeals=reorderMealsByUrgency(meals,opened,pantry);
   const diversityPlanContext={cats,style,season,prefs,pantry,people,supermarket,portionScale:1};
   const diversityBalancedMeals=rebalanceSimilarDays(urgencyOrderedMeals,diversityPlanContext);
-  const familyBalancedMeals=enforceMinimumMeatAndFish(diversityBalancedMeals,diversityPlanContext);
-  const optimized=optimizeMealsToBudget(familyBalancedMeals,people,supermarket,budget,cats,style,pantry,season,prefs);
+  const optimized=optimizeMealsToBudget(diversityBalancedMeals,people,supermarket,budget,cats,style,pantry,season,prefs);
+
+  // Il controllo viene applicato dopo l’ottimizzazione del budget,
+  // così carne e pesce non vengono eliminati dalle sostituzioni economiche.
+  optimized.meals=enforceWeeklyStructure(optimized.meals,diversityPlanContext);
+
+  // Ricalcola la spesa sul menu definitivo.
+  const finalShopping=calculateShopping(
+    optimized.meals,people,supermarket,pantry,optimized.portionScale||1
+  );
+  optimized.shopping=finalShopping.shopping;
+  optimized.spent=finalShopping.spent;
+  optimized.usedFromPantry=finalShopping.usedFromPantry||{};
 
   currentPlan={
     id:Date.now(),
@@ -1870,7 +1983,9 @@ function buildPlan(){
   currentPlan.expiryPlan=buildExpiryPlan(currentPlan);
   currentPlan.batchCooking=buildBatchCookingPlan(currentPlan);
   currentPlan.varietyScore=weeklySimilarityScore(currentPlan.meals);
+  currentPlan.structureStatus=weeklyStructureStatus(currentPlan.meals);
   currentPlan.varietyScore=weeklySimilarityScore(currentPlan.meals);
+  currentPlan.structureStatus=weeklyStructureStatus(currentPlan.meals);
 
   localStorage.setItem("smartCampaniaV2Plan",JSON.stringify(currentPlan));
   localStorage.removeItem("smartCampaniaBoughtItems");
@@ -2549,8 +2664,9 @@ function renderPlan(){
     <div class="shopping-item"><div class="item-title">Riutilizzo ingredienti</div><div class="price">${(p.chefScore||calculateChefScore(p)).reuse}/100</div></div>
     <div class="shopping-item"><div class="item-title">Riduzione sprechi</div><div class="price">${(p.chefScore||calculateChefScore(p)).waste}/100</div></div>
     <div class="shopping-item"><div class="item-title">Varietà reale del menu</div><div class="price">${p.varietyScore??weeklySimilarityScore(p.meals)}/100</div></div>
-    <div class="shopping-item"><div class="item-title">Carne nella settimana</div><div class="price">${hasWeeklySecondFamily(p.meals,"carne")?"Sì":"No"}</div></div>
-    <div class="shopping-item"><div class="item-title">Pesce nella settimana</div><div class="price">${hasWeeklySecondFamily(p.meals,"pesce")?"Sì":"No"}</div></div>
+    <div class="shopping-item"><div class="item-title">Carne nella settimana</div><div class="price">${weeklyStructureStatus(p.meals).meat?"Sì":"No"}</div></div>
+    <div class="shopping-item"><div class="item-title">Pesce nella settimana</div><div class="price">${weeklyStructureStatus(p.meals).fish?"Sì":"No"}</div></div>
+    <div class="shopping-item"><div class="item-title">Ricette identiche ripetute</div><div class="price">${weeklyStructureStatus(p.meals).duplicateIds}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti prioritari</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.shelfLife<=7).length}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti deperibili non usati</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.warning).length}</div></div>
     <div class="shopping-item"><div class="item-title">Ingredienti da preparare insieme</div><div class="price">${(p.batchCooking||buildBatchCookingPlan(p)).ingredientsOptimized}</div></div>
