@@ -198,3 +198,14 @@ VERSIONE 11.5 — HOME PIÙ SNELLA
 - Persone e Stagione restano affiancati.
 - Recuperato spazio verticale nella colonna sinistra.
 - Motore, prezzi medi, frutta, ricette e tutte le funzioni restano invariati.
+
+
+VERSIONE 11.6 — HOME COMPATTA
+- Categorie alimentari più compatte.
+- Preferenze alimentari più compatte.
+- Dispensa rinominata e resa più essenziale.
+- Ridotti gli spazi verticali tra i campi.
+- Pulsanti leggermente più compatti.
+- Colonna sinistra più stretta su PC.
+- Più spazio visibile per il menu settimanale.
+- Nessuna funzione modificata.
