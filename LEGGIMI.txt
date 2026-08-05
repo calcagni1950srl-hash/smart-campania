@@ -209,3 +209,12 @@ VERSIONE 11.6 — HOME COMPATTA
 - Colonna sinistra più stretta su PC.
 - Più spazio visibile per il menu settimanale.
 - Nessuna funzione modificata.
+
+
+VERSIONE 11.7 — CARNE E PESCE GARANTITI
+- Aggiunti 36 nuovi secondi di carne.
+- Inserite bistecca, tagliata, fettine, pizzaiola, scaloppine, salsiccia, cotolette, pollo, tacchino, vitello, hamburger, polpette e polpettone.
+- Ogni settimana viene garantito almeno un pasto di carne.
+- Ogni settimana viene garantito almeno un pasto di pesce.
+- Le regole rispettano stagione, stile, preferenze e budget.
+- Evitate, quando possibile, ripetizioni ravvicinate.
