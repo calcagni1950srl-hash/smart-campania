@@ -379,3 +379,12 @@ VERSIONE 13.6 — PANNELLO DISPENSA RIDISEGNATO
 - Nuovo ordinamento A–Z, selezionati prima o quantità maggiore.
 - Conteggio semplificato dei prodotti in dispensa.
 - Ricerca, categorie, quantità, selezione e azzeramento restano funzionanti.
+
+
+VERSIONE 13.7 — DISPENSA SENZA “APERTO”
+- Eliminata la voce “Aperto” e la relativa checkbox.
+- Rimossa la logica di salvataggio collegata allo stato aperto/chiuso.
+- Le quantità presenti in dispensa continuano a essere sottratte dalla lista della spesa.
+- Se una quantità è sufficiente, il prodotto non viene ricomprato.
+- Se non è sufficiente, viene acquistata solo la quantità mancante secondo le confezioni disponibili.
+- Il pannello Dispensa è ora più compatto e leggibile.

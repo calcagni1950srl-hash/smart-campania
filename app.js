@@ -102,7 +102,6 @@ function sortedPantryEntries(){
 function renderPantry(){
   const grid=document.getElementById("pantryGrid");
   const selectedBefore=new Set(pantryItems());
-  const openedBefore=new Set(openedPantryItems());
   const quantities=loadPantryQuantities();
 
   const cats=["all",...new Set(
@@ -120,8 +119,6 @@ function renderPantry(){
     const unit=pantryDisplayUnit(product);
     const quantity=quantities[key]??"";
     const checked=selectedBefore.has(key)?"checked":"";
-    const opened=openedBefore.has(key)?"checked":"";
-
     return `<div class="pantry-item pantry-item-redesign"
       data-pantry-label="${product.name.toLowerCase()}"
       data-pantry-category="${pantryProductCategory(product)}"
@@ -146,10 +143,6 @@ function renderPantry(){
         <span class="pantry-unit">${unit}</span>
       </div>
 
-      <label class="opened-label pantry-opened-toggle" title="Prodotto già aperto">
-        <input type="checkbox" data-opened="${key}" ${opened}>
-        <span>Aperto</span>
-      </label>
     </div>`;
   }).join("");
 
@@ -160,15 +153,6 @@ function renderPantry(){
         item.classList.toggle("active",item.dataset.pantryCat===activePantryCategory)
       );
       filterPantry();
-    };
-  });
-
-  document.querySelectorAll("[data-opened]").forEach(input=>{
-    input.onchange=()=>{
-      const current=new Set(openedPantryItems());
-      if(input.checked) current.add(input.dataset.opened);
-      else current.delete(input.dataset.opened);
-      saveOpenedPantry([...current]);
     };
   });
 
@@ -1097,17 +1081,7 @@ function buildChefSequence(pool,count,season,style,type){
 }
 
 
-function openedPantryItems(){
-  try{
-    return JSON.parse(localStorage.getItem("smartCampaniaOpenedPantry")||"[]");
-  }catch(e){
-    return [];
-  }
-}
 
-function saveOpenedPantry(items){
-  localStorage.setItem("smartCampaniaOpenedPantry", JSON.stringify(items));
-}
 
 function recipeIngredientUsageScore(recipe, pantry, opened){
   return Object.keys(recipe.ingredients).reduce((score,key)=>{
@@ -3443,7 +3417,6 @@ function buildPlan(){
   if(fruitCheckbox?.checked && !cats.includes("frutta")) cats.push("frutta");
 
   const pantry=pantryItems();
-  const opened=openedPantryItems();
   const prefs=foodPreferences();
 
   if(!cats.length){
@@ -3453,7 +3426,7 @@ function buildPlan(){
 
   const context={
     supermarket,people,budget,lunch,dinner,style,season,
-    cats,pantry,opened,prefs
+    cats,pantry,prefs
   };
 
   let result=buildWeekWithinBudget(context,budget);
@@ -3468,7 +3441,7 @@ function buildPlan(){
 
   currentPlan={
     id:Date.now(),
-    supermarket,people,budget,lunch,dinner,style,season,cats,pantry,opened,prefs,
+    supermarket,people,budget,lunch,dinner,style,season,cats,pantry,prefs,
     pantryCommitted:false,
     pantryCommitDate:null,
     pantryCommitDetails:[],
