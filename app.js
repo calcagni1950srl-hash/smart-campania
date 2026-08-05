@@ -864,6 +864,57 @@ function rebalanceLunchDinner(meals){
   return meals;
 }
 
+
+function chefMemoryProfile(weeks=4){
+  const history=loadMenuHistory().slice(0,weeks);
+  const recipeIds=new Set();
+  const recipeFrequency={};
+  const firstBases={};
+  const proteinTypes={};
+
+  history.forEach((week,weekIndex)=>{
+    const weight=Math.max(1,weeks-weekIndex);
+    (week.recipes||[]).forEach(saved=>{
+      recipeIds.add(saved.id);
+      recipeFrequency[saved.id]=(recipeFrequency[saved.id]||0)+weight;
+
+      const recipe=RECIPES.find(item=>item.id===saved.id);
+      if(!recipe) return;
+
+      if(recipe.type==="primo"){
+        const base=recipeBaseFormat(recipe);
+        firstBases[base]=(firstBases[base]||0)+weight;
+      }
+
+      if(recipe.type==="secondo"){
+        const subtype=recipeProteinSubtype(recipe);
+        proteinTypes[subtype]=(proteinTypes[subtype]||0)+weight;
+      }
+    });
+  });
+
+  return {weeks:history.length,recipeIds,recipeFrequency,firstBases,proteinTypes};
+}
+
+function chefMemoryPenalty(recipe,memory){
+  let penalty=(memory.recipeFrequency[recipe.id]||0)*12;
+  if(recipe.type==="primo"){
+    penalty+=(memory.firstBases[recipeBaseFormat(recipe)]||0)*2.5;
+  }
+  if(recipe.type==="secondo"){
+    penalty+=(memory.proteinTypes[recipeProteinSubtype(recipe)]||0)*2.8;
+  }
+  return penalty;
+}
+
+function recentRecipesUsedInPlan(meals,weeks=4){
+  const memory=chefMemoryProfile(weeks);
+  return meals
+    .flatMap(day=>[...day.lunch,...day.dinner])
+    .filter(recipe=>recipe.type!=="frutta" && memory.recipeIds.has(recipe.id))
+    .length;
+}
+
 function longTermRecentRecipeIds(){
   const history=loadMenuHistory().slice(0,5);
   return new Set(history.flatMap(h=>h.recipes.map(r=>r.id)));
@@ -2519,8 +2570,12 @@ function chooseBasketRecipe(meals,slot,context,state,forcedFamily=null){
   const pool=basketCandidatePool(slot,context,forcedFamily);
   if(!pool.length) return null;
 
+  const memory=state.memory||chefMemoryProfile(4);
   const unused=pool.filter(recipe=>!state.usedIds.has(recipe.id));
   let candidates=unused.length ? unused : pool;
+
+  const freshCandidates=candidates.filter(recipe=>!memory.recipeIds.has(recipe.id));
+  if(freshCandidates.length) candidates=freshCandidates;
 
   // Per i primi, evita lo stesso formato finché esistono alternative.
   if(slot.type==="primo"){
@@ -2555,9 +2610,11 @@ function chooseBasketRecipe(meals,slot,context,state,forcedFamily=null){
     const baseB=recipeBaseFormat(b);
     const basePenaltyA=weeklyBaseCount(meals,baseA)*8;
     const basePenaltyB=weeklyBaseCount(meals,baseB)*8;
+    const memoryPenaltyA=chefMemoryPenalty(a,memory);
+    const memoryPenaltyB=chefMemoryPenalty(b,memory);
 
-    return (costA + newKeysA*1.8 + similarityA*2.4 + familyPenaltyA + basePenaltyA) -
-           (costB + newKeysB*1.8 + similarityB*2.4 + familyPenaltyB + basePenaltyB);
+    return (costA + newKeysA*1.8 + similarityA*2.4 + familyPenaltyA + basePenaltyA + memoryPenaltyA) -
+           (costB + newKeysB*1.8 + similarityB*2.4 + familyPenaltyB + basePenaltyB + memoryPenaltyB);
   })[0]||null;
 }
 
@@ -2652,7 +2709,8 @@ function buildBasketFirstWeek(context,portionScale){
     usedIds:new Set(),
     recent:[],
     familyUse:{},
-    portionScale
+    portionScale,
+    memory:chefMemoryProfile(4)
   };
 
   let secondIndex=0;
@@ -2757,13 +2815,18 @@ function cheapestRecipeForSlot(slot,context,usedIds=new Set(),usedBases=new Set(
   const unused=pool.filter(recipe=>!usedIds.has(recipe.id));
   if(unused.length) pool=unused;
 
-  return [...pool].sort((a,b)=>{
+  const memory=chefMemoryProfile(4);
+  const fresh=pool.filter(recipe=>!memory.recipeIds.has(recipe.id));
+  const candidates=fresh.length?fresh:pool;
+
+  return [...candidates].sort((a,b)=>{
     const costA=recipeCost(a,context.people,context.supermarket,1);
     const costB=recipeCost(b,context.people,context.supermarket,1);
     const ingredientsA=Object.keys(a.ingredients||{}).length;
     const ingredientsB=Object.keys(b.ingredients||{}).length;
 
-    return (costA+ingredientsA*0.12)-(costB+ingredientsB*0.12);
+    return (costA+ingredientsA*0.12+chefMemoryPenalty(a,memory)*0.10)-
+           (costB+ingredientsB*0.12+chefMemoryPenalty(b,memory)*0.10);
   })[0]||null;
 }
 
@@ -2953,6 +3016,8 @@ function buildPlan(){
     basketFirst:true,
     strictMarketBudget:result.strictMarketBudget||false,
     basketIngredientCount:basketIngredientKeys(result.meals).size,
+    memoryWeeks:chefMemoryProfile(4).weeks,
+    recentRecipesReused:recentRecipesUsedInPlan(result.meals,4),
     balanceStats:weeklyBalanceStats(result.meals),
     nutritionStats:weeklyNutrition(result.meals,result.portionScale||1),
     satietyStats:{
@@ -3637,6 +3702,8 @@ function renderPlan(){
     <div class="shopping-item"><div class="item-title">Articoli già acquistati</div><div class="price">${Object.values(loadBoughtItems()).filter(Boolean).length}</div></div>
     <div class="shopping-item"><div class="item-title">Ricette preferite</div><div class="price">${loadFavorites().size}</div></div>
     <div class="shopping-item"><div class="item-title">Menu salvati in cronologia</div><div class="price">${loadMenuHistory().length}</div></div>
+    <div class="shopping-item"><div class="item-title">Settimane ricordate da Chef AI</div><div class="price">${p.memoryWeeks??chefMemoryProfile(4).weeks}/4</div></div>
+    <div class="shopping-item"><div class="item-title">Ricette recenti riutilizzate</div><div class="price">${p.recentRecipesReused??recentRecipesUsedInPlan(p.meals,4)}</div></div>
     <div class="shopping-item"><div class="item-title">Chef Score</div><div class="price">${(p.chefScore||calculateChefScore(p)).total}/100</div></div>
     <div class="shopping-item"><div class="item-title">Valutazione menu</div><div class="price">${chefScoreLabel((p.chefScore||calculateChefScore(p)).total)}</div></div>
     <div class="shopping-item"><div class="item-title">Riutilizzo ingredienti</div><div class="price">${(p.chefScore||calculateChefScore(p)).reuse}/100</div></div>

@@ -342,3 +342,11 @@ VERSIONE 13.2.1 — CORREZIONE PRODOTTI
 - Aggiunti al database prezzi tutti gli ingredienti usati nei blocchi carne, pesce e primi.
 - Integrati i valori nutrizionali principali.
 - Nessuna ricetta rimossa.
+
+
+VERSIONE 13.3 — CHEF AI MEMORIA
+- Chef AI ricorda le ultime quattro settimane.
+- Evita le stesse ricette quando esistono alternative compatibili.
+- Riduce anche la ripetizione degli stessi formati di primo e degli stessi tipi di carne o pesce.
+- Il budget resta prioritario: nei menu molto economici può riutilizzare una ricetta recente.
+- Nel riepilogo compaiono le settimane ricordate e le ricette recenti riutilizzate.
