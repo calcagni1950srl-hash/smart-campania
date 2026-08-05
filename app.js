@@ -2455,12 +2455,58 @@ function projectedBasketCost(meals,slot,recipe,context,portionScale){
   ).spent;
 }
 
+
+function recipeBaseFormat(recipe){
+  const ingredients=Object.keys(recipe.ingredients||{});
+  const name=(recipe.name||"").toLowerCase();
+
+  if(ingredients.includes("spaghetti") || name.includes("spaghetti")) return "spaghetti";
+  if(ingredients.includes("penne") || name.includes("penne")) return "penne";
+  if(ingredients.includes("riso") || name.includes("riso") || name.includes("risotto")) return "riso";
+  if(ingredients.includes("gnocchi") || name.includes("gnocchi")) return "gnocchi";
+  if(ingredients.includes("pasta") || name.includes("pasta")) return "pasta_generica";
+  if(name.includes("lasagna")) return "lasagna";
+  if(name.includes("cous cous") || name.includes("couscous")) return "cous_cous";
+  if(recipe.tags?.includes("legumi")) return "legumi";
+  if(recipe.type==="secondo") return `secondo:${recipeFamily(recipe)}`;
+  if(recipe.type==="contorno"){
+    const veg=ingredients.find(key=>
+      ["zucchine","melanzane","broccoli","cavolfiore","spinaci","peperoni","patate","insalata","pomodorini","fagioli","ceci","lenticchie"].includes(key)
+    );
+    return veg?`contorno:${veg}`:"contorno";
+  }
+  if(recipe.type==="frutta"){
+    return `frutta:${ingredients[0]||recipe.id}`;
+  }
+
+  return recipe.type||"altro";
+}
+
+function weeklyBaseCount(meals,baseKey){
+  return meals
+    .flatMap(day=>[...day.lunch,...day.dinner])
+    .filter(recipe=>recipe.type!=="frutta")
+    .filter(recipe=>recipeBaseFormat(recipe)===baseKey)
+    .length;
+}
+
 function chooseBasketRecipe(meals,slot,context,state,forcedFamily=null){
   const pool=basketCandidatePool(slot,context,forcedFamily);
   if(!pool.length) return null;
 
   const unused=pool.filter(recipe=>!state.usedIds.has(recipe.id));
-  const candidates=unused.length ? unused : pool;
+  let candidates=unused.length ? unused : pool;
+
+  // Per i primi, evita lo stesso formato finché esistono alternative.
+  if(slot.type==="primo"){
+    const unusedBaseCandidates=candidates.filter(recipe=>
+      weeklyBaseCount(meals,recipeBaseFormat(recipe))===0
+    );
+    if(unusedBaseCandidates.length){
+      candidates=unusedBaseCandidates;
+    }
+  }
+
   const currentKeys=basketIngredientKeys(meals);
 
   return [...candidates].sort((a,b)=>{
@@ -2480,8 +2526,13 @@ function chooseBasketRecipe(meals,slot,context,state,forcedFamily=null){
     const familyPenaltyA=(state.familyUse[familyA]||0)*0.65;
     const familyPenaltyB=(state.familyUse[familyB]||0)*0.65;
 
-    return (costA + newKeysA*1.8 + similarityA*2.4 + familyPenaltyA) -
-           (costB + newKeysB*1.8 + similarityB*2.4 + familyPenaltyB);
+    const baseA=recipeBaseFormat(a);
+    const baseB=recipeBaseFormat(b);
+    const basePenaltyA=weeklyBaseCount(meals,baseA)*8;
+    const basePenaltyB=weeklyBaseCount(meals,baseB)*8;
+
+    return (costA + newKeysA*1.8 + similarityA*2.4 + familyPenaltyA + basePenaltyA) -
+           (costB + newKeysB*1.8 + similarityB*2.4 + familyPenaltyB + basePenaltyB);
   })[0]||null;
 }
 
@@ -2513,6 +2564,57 @@ function addBasketFruit(meals,context,portionScale){
     if(meals[dayIndex][target].length){
       meals[dayIndex][target].push(cheapest[dayIndex%cheapest.length]);
     }
+  });
+
+  return meals;
+}
+
+
+function diversifyFirstCourseFormats(meals,context,portionScale){
+  const usedIds=new Set();
+  const usedBases=new Set();
+
+  meals.forEach((day,dayIndex)=>{
+    ["lunch","dinner"].forEach(mealKey=>{
+      day[mealKey].forEach((recipe,index)=>{
+        if(recipe.type!=="primo") return;
+
+        const base=recipeBaseFormat(recipe);
+        const repeatedBase=usedBases.has(base);
+        const repeatedRecipe=usedIds.has(recipe.id);
+
+        if(!repeatedBase && !repeatedRecipe){
+          usedBases.add(base);
+          usedIds.add(recipe.id);
+          return;
+        }
+
+        const pool=RECIPES.filter(candidate=>
+          candidate.type==="primo" &&
+          recipeAllowed(candidate,context.cats,context.style,context.season,context.prefs) &&
+          !usedIds.has(candidate.id) &&
+          !usedBases.has(recipeBaseFormat(candidate))
+        );
+
+        if(!pool.length){
+          usedBases.add(base);
+          usedIds.add(recipe.id);
+          return;
+        }
+
+        const slot={dayIndex,mealKey,type:"primo"};
+        const replacement=[...pool].sort((a,b)=>
+          projectedBasketCost(meals,slot,a,context,portionScale) -
+          projectedBasketCost(meals,slot,b,context,portionScale)
+        )[0];
+
+        if(replacement){
+          day[mealKey][index]=replacement;
+          usedIds.add(replacement.id);
+          usedBases.add(recipeBaseFormat(replacement));
+        }
+      });
+    });
   });
 
   return meals;
@@ -2552,6 +2654,7 @@ function buildBasketFirstWeek(context,portionScale){
     state.familyUse[family]=(state.familyUse[family]||0)+1;
   });
 
+  diversifyFirstCourseFormats(meals,context,portionScale);
   addBasketFruit(meals,context,portionScale);
   return meals;
 }
@@ -3355,6 +3458,12 @@ function renderPlan(){
     <div class="shopping-item"><div class="item-title">Menu economico automatico</div><div class="price">${p.budgetFallback?"Sì":"No"}</div></div>
     <div class="shopping-item"><div class="item-title">Paniere costruito prima delle ricette</div><div class="price">${p.basketFirst?"Sì":"No"}</div></div>
     <div class="shopping-item"><div class="item-title">Ingredienti diversi nel paniere</div><div class="price">${p.basketIngredientCount||basketIngredientKeys(p.meals).size}</div></div>
+    <div class="shopping-item"><div class="item-title">Formati di primo ripetuti</div><div class="price">${(()=>{
+      const bases=p.meals.flatMap(d=>[...d.lunch,...d.dinner])
+        .filter(r=>r.type==="primo")
+        .map(r=>recipeBaseFormat(r));
+      return bases.length-new Set(bases).size;
+    })()}</div></div>
     <div class="shopping-item"><div class="item-title">Struttura pranzo/cena rispettata</div><div class="price">${menuRespectsSelectedModes(p.meals,p.lunch,p.dinner)?"Sì":"No"}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti prioritari</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.shelfLife<=7).length}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti deperibili non usati</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.warning).length}</div></div>

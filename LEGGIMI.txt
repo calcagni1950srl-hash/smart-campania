@@ -293,3 +293,11 @@ VERSIONE 12.1 — TASTI CAMBIA PULITI
 - Resta il pulsante “Cambia” a destra di ogni singola ricetta.
 - Resta il pulsante “Giorno” per sostituire l’intera giornata.
 - Nessuna modifica al motore del budget, al paniere o alla lista della spesa.
+
+
+VERSIONE 12.2 — VARIETÀ DEI PRIMI
+- Evitata la ripetizione dello stesso formato di pasta nella stessa settimana.
+- Spaghetti, penne, riso, gnocchi e altre basi vengono alternati.
+- Lo stesso formato viene riutilizzato solo quando non esistono alternative compatibili.
+- Aggiunto un controllo finale sui primi prima della generazione della lista della spesa.
+- Il budget continua a essere calcolato sul paniere reale.
