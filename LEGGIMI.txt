@@ -350,3 +350,12 @@ VERSIONE 13.3 — CHEF AI MEMORIA
 - Riduce anche la ripetizione degli stessi formati di primo e degli stessi tipi di carne o pesce.
 - Il budget resta prioritario: nei menu molto economici può riutilizzare una ricetta recente.
 - Nel riepilogo compaiono le settimane ricordate e le ricette recenti riutilizzate.
+
+
+VERSIONE 13.4 — CHEF AI NUTRIZIONISTA
+- Analizza la distribuzione settimanale di carne, pesce, legumi, uova, verdure, frutta e varietà dei primi.
+- Prova a correggere il menu sostituendo ricette dello stesso tipo.
+- Ogni sostituzione deve rispettare budget, supermercato, stagione, preferenze e struttura di pranzo/cena.
+- Non elimina l’unica porzione già necessaria di carne, pesce, legumi o uova.
+- Aggiunto punteggio Nutrizionista 0–100 e riepilogo delle correzioni.
+- Le indicazioni sono euristiche per la pianificazione dei pasti e non sostituiscono il parere di un professionista sanitario.

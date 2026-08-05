@@ -1063,14 +1063,25 @@ function calculateChefScore(plan){
   const wasteBase=recipes.reduce((s,r)=>s+recipeWasteRisk(r),0)/totalRecipes;
   const wasteScore=Math.max(0,100-wasteBase*8);
 
+  const nutritionistContext={
+    cats:plan.cats||[],
+    lunch:plan.lunch,
+    dinner:plan.dinner
+  };
+  const nutritionistScore=(
+    plan.nutritionistReport||
+    nutritionistReport(meals,nutritionistContext)
+  ).score;
+
   const score=Math.round(
     budgetScore*0.24 +
     reuseScore*0.19 +
     varietyScore*0.18 +
     balanceScore*0.15 +
-    seasonScore*0.10 +
-    pantryScore*0.08 +
-    wasteScore*0.06
+    seasonScore*0.08 +
+    pantryScore*0.07 +
+    wasteScore*0.05 +
+    nutritionistScore*0.06
   );
 
   return {
@@ -1081,7 +1092,8 @@ function calculateChefScore(plan){
     balance:Math.round(balanceScore),
     season:Math.round(seasonScore),
     pantry:Math.round(pantryScore),
-    waste:Math.round(wasteScore)
+    waste:Math.round(wasteScore),
+    nutritionist:Math.round(nutritionistScore)
   };
 }
 
@@ -2963,6 +2975,345 @@ function strictBudgetForSelectedMarket(context,budget){
   };
 }
 
+
+const NUTRITIONIST_VEGETABLE_KEYS=new Set([
+  "zucchine","melanzane","broccoli","cavolfiore","spinaci","peperoni",
+  "patate","insalata","pomodorini","passata","piselli","mais",
+  "surgelati_misti","fagioli","ceci","lenticchie"
+]);
+
+function recipeHasEggs(recipe){
+  return Boolean(recipe?.ingredients?.uova);
+}
+
+function recipeHasVegetables(recipe){
+  if(recipe?.tags?.includes("verdure")) return true;
+  return Object.keys(recipe?.ingredients||{}).some(key=>
+    NUTRITIONIST_VEGETABLE_KEYS.has(key)
+  );
+}
+
+function nutritionistWeeklyStats(meals){
+  const stats={
+    meat:0,
+    fish:0,
+    legumes:0,
+    eggs:0,
+    vegetables:0,
+    fruitDays:0,
+    uniqueFirstBases:0,
+    firstCourses:0
+  };
+
+  const firstBases=new Set();
+
+  meals.forEach(day=>{
+    const recipes=[...day.lunch,...day.dinner];
+
+    if(recipes.some(recipe=>recipe.type==="frutta")) stats.fruitDays++;
+
+    recipes.forEach(recipe=>{
+      if(recipe.type==="frutta") return;
+
+      const family=recipeFamily(recipe);
+      if(recipe.type==="secondo" && family==="carne") stats.meat++;
+      if(recipe.type==="secondo" && family==="pesce") stats.fish++;
+      if(recipe.tags?.includes("legumi")) stats.legumes++;
+      if(recipeHasEggs(recipe)) stats.eggs++;
+      if(recipeHasVegetables(recipe)) stats.vegetables++;
+
+      if(recipe.type==="primo"){
+        stats.firstCourses++;
+        firstBases.add(recipeBaseFormat(recipe));
+      }
+    });
+  });
+
+  stats.uniqueFirstBases=firstBases.size;
+  return stats;
+}
+
+function nutritionistTargets(meals,context){
+  const secondSlots=meals
+    .flatMap(day=>[...day.lunch,...day.dinner])
+    .filter(recipe=>recipe.type==="secondo").length;
+
+  const totalMain=meals
+    .flatMap(day=>[...day.lunch,...day.dinner])
+    .filter(recipe=>recipe.type!=="frutta").length;
+
+  return {
+    meat:secondSlots>=4?2:(secondSlots>=1?1:0),
+    fish:secondSlots>=4?2:(secondSlots>=2?1:0),
+    legumes:totalMain>=7?2:(totalMain>=1?1:0),
+    eggs:secondSlots>=4?1:0,
+    vegetables:Math.min(7,Math.max(3,Math.round(totalMain*0.40))),
+    fruitDays:context.cats.includes("frutta")?Math.min(7,DAYS.length):0,
+    uniqueFirstBases:Math.min(
+      5,
+      meals.flatMap(day=>[...day.lunch,...day.dinner])
+        .filter(recipe=>recipe.type==="primo").length
+    )
+  };
+}
+
+function nutritionistScoreFromStats(stats,targets){
+  const ratios=[
+    targets.meat?Math.min(1,stats.meat/targets.meat):1,
+    targets.fish?Math.min(1,stats.fish/targets.fish):1,
+    targets.legumes?Math.min(1,stats.legumes/targets.legumes):1,
+    targets.eggs?Math.min(1,stats.eggs/targets.eggs):1,
+    targets.vegetables?Math.min(1,stats.vegetables/targets.vegetables):1,
+    targets.fruitDays?Math.min(1,stats.fruitDays/targets.fruitDays):1,
+    targets.uniqueFirstBases?Math.min(1,stats.uniqueFirstBases/targets.uniqueFirstBases):1
+  ];
+
+  return Math.round(
+    ratios.reduce((sum,value)=>sum+value,0)/ratios.length*100
+  );
+}
+
+function nutritionistReport(meals,context){
+  const stats=nutritionistWeeklyStats(meals);
+  const targets=nutritionistTargets(meals,context);
+  const score=nutritionistScoreFromStats(stats,targets);
+
+  const notes=[];
+  const add=(key,label)=>{
+    if(targets[key]>0 && stats[key]<targets[key]){
+      notes.push(`${label}: ${stats[key]}/${targets[key]}`);
+    }
+  };
+
+  add("meat","Carne");
+  add("fish","Pesce");
+  add("legumes","Legumi");
+  add("eggs","Uova");
+  add("vegetables","Piatti con verdure");
+  add("fruitDays","Giorni con frutta");
+  add("uniqueFirstBases","Varietà dei primi");
+
+  return {
+    score,
+    stats,
+    targets,
+    notes,
+    balanced:score>=80
+  };
+}
+
+function nutritionistDesiredPredicates(report){
+  const wishes=[];
+
+  if(report.stats.fish<report.targets.fish){
+    wishes.push({
+      key:"fish",
+      type:"secondo",
+      match:recipe=>recipeFamily(recipe)==="pesce"
+    });
+  }
+
+  if(report.stats.meat<report.targets.meat){
+    wishes.push({
+      key:"meat",
+      type:"secondo",
+      match:recipe=>recipeFamily(recipe)==="carne"
+    });
+  }
+
+  if(report.stats.legumes<report.targets.legumes){
+    wishes.push({
+      key:"legumes",
+      type:null,
+      match:recipe=>recipe.tags?.includes("legumi")
+    });
+  }
+
+  if(report.stats.eggs<report.targets.eggs){
+    wishes.push({
+      key:"eggs",
+      type:"secondo",
+      match:recipe=>recipeHasEggs(recipe)
+    });
+  }
+
+  if(report.stats.vegetables<report.targets.vegetables){
+    wishes.push({
+      key:"vegetables",
+      type:null,
+      match:recipe=>recipeHasVegetables(recipe)
+    });
+  }
+
+  return wishes;
+}
+
+function nutritionistCanReplaceWithoutBreaking(recipe,report){
+  if(recipe.type==="secondo"){
+    const family=recipeFamily(recipe);
+    if(
+      family==="carne" &&
+      report.targets.meat>0 &&
+      report.stats.meat<=report.targets.meat
+    ) return false;
+
+    if(
+      family==="pesce" &&
+      report.targets.fish>0 &&
+      report.stats.fish<=report.targets.fish
+    ) return false;
+  }
+
+  if(
+    recipe.tags?.includes("legumi") &&
+    report.targets.legumes>0 &&
+    report.stats.legumes<=report.targets.legumes
+  ) return false;
+
+  if(
+    recipeHasEggs(recipe) &&
+    report.targets.eggs>0 &&
+    report.stats.eggs<=report.targets.eggs
+  ) return false;
+
+  return true;
+}
+
+function nutritionistTryBestSwap(meals,context,budget,portionScale,wish){
+  const currentReport=nutritionistReport(meals,context);
+  const usedIds=new Set(
+    meals.flatMap(day=>[...day.lunch,...day.dinner]).map(recipe=>recipe.id)
+  );
+
+  let best=null;
+
+  meals.forEach((day,dayIndex)=>{
+    ["lunch","dinner"].forEach(mealKey=>{
+      day[mealKey].forEach((current,recipeIndex)=>{
+        if(current.type==="frutta") return;
+        if(wish.type && current.type!==wish.type) return;
+        if(!nutritionistCanReplaceWithoutBreaking(current,currentReport)) return;
+
+        const candidates=RECIPES.filter(candidate=>
+          candidate.type===current.type &&
+          wish.match(candidate) &&
+          recipeAllowed(
+            candidate,
+            context.cats,
+            context.style,
+            context.season,
+            context.prefs
+          ) &&
+          !usedIds.has(candidate.id)
+        );
+
+        candidates.forEach(candidate=>{
+          const test=meals.map(item=>({
+            day:item.day,
+            lunch:[...item.lunch],
+            dinner:[...item.dinner]
+          }));
+
+          test[dayIndex][mealKey][recipeIndex]=candidate;
+
+          if(!menuRespectsSelectedModes(test,context.lunch,context.dinner)) return;
+
+          const shopping=calculateShopping(
+            test,
+            context.people,
+            context.supermarket,
+            context.pantry||[],
+            portionScale
+          );
+
+          if(shopping.spent>budget) return;
+
+          const report=nutritionistReport(test,context);
+          if(report.score<=currentReport.score) return;
+
+          const recentPenalty=chefMemoryPenalty(
+            candidate,
+            chefMemoryProfile(4)
+          );
+
+          const rank=
+            report.score*100 -
+            shopping.spent -
+            recentPenalty*0.25;
+
+          if(!best || rank>best.rank){
+            best={
+              meals:test,
+              shopping,
+              report,
+              rank,
+              replacement:{
+                from:current.name,
+                to:candidate.name,
+                goal:wish.key
+              }
+            };
+          }
+        });
+      });
+    });
+  });
+
+  return best;
+}
+
+function applyChefAINutritionist(result,context,budget){
+  let meals=result.meals;
+  let shopping={
+    shopping:result.shopping,
+    spent:result.spent,
+    usedFromPantry:result.usedFromPantry||{}
+  };
+  const changes=[];
+  const portionScale=result.portionScale||1;
+
+  for(let attempt=0;attempt<8;attempt++){
+    const report=nutritionistReport(meals,context);
+    if(report.score>=90) break;
+
+    const wishes=nutritionistDesiredPredicates(report);
+    let improved=false;
+
+    for(const wish of wishes){
+      const swap=nutritionistTryBestSwap(
+        meals,
+        context,
+        budget,
+        portionScale,
+        wish
+      );
+
+      if(swap){
+        meals=swap.meals;
+        shopping=swap.shopping;
+        changes.push(swap.replacement);
+        improved=true;
+        break;
+      }
+    }
+
+    if(!improved) break;
+  }
+
+  const finalReport=nutritionistReport(meals,context);
+
+  return {
+    ...result,
+    meals,
+    shopping:shopping.shopping,
+    spent:shopping.spent,
+    usedFromPantry:shopping.usedFromPantry||{},
+    nutritionistReport:finalReport,
+    nutritionistChanges:changes,
+    withinBudget:shopping.spent<=budget
+  };
+}
+
 function buildPlan(){
   const supermarket=document.getElementById("supermarket").value;
   const people=Math.max(1,parseInt(document.getElementById("people").value)||1);
@@ -2996,6 +3347,9 @@ function buildPlan(){
     result=strictBudgetForSelectedMarket(context,budget);
   }
 
+  // Chef AI Nutrizionista migliora l’equilibrio senza superare il budget.
+  result=applyChefAINutritionist(result,context,budget);
+
   currentPlan={
     id:Date.now(),
     supermarket,people,budget,lunch,dinner,style,season,cats,pantry,opened,prefs,
@@ -3018,6 +3372,8 @@ function buildPlan(){
     basketIngredientCount:basketIngredientKeys(result.meals).size,
     memoryWeeks:chefMemoryProfile(4).weeks,
     recentRecipesReused:recentRecipesUsedInPlan(result.meals,4),
+    nutritionistReport:result.nutritionistReport||nutritionistReport(result.meals,context),
+    nutritionistChanges:result.nutritionistChanges||[],
     balanceStats:weeklyBalanceStats(result.meals),
     nutritionStats:weeklyNutrition(result.meals,result.portionScale||1),
     satietyStats:{
@@ -3704,6 +4060,12 @@ function renderPlan(){
     <div class="shopping-item"><div class="item-title">Menu salvati in cronologia</div><div class="price">${loadMenuHistory().length}</div></div>
     <div class="shopping-item"><div class="item-title">Settimane ricordate da Chef AI</div><div class="price">${p.memoryWeeks??chefMemoryProfile(4).weeks}/4</div></div>
     <div class="shopping-item"><div class="item-title">Ricette recenti riutilizzate</div><div class="price">${p.recentRecipesReused??recentRecipesUsedInPlan(p.meals,4)}</div></div>
+    <div class="shopping-item"><div class="item-title">Chef AI Nutrizionista</div><div class="price">${(p.nutritionistReport||nutritionistReport(p.meals,p)).score}/100</div></div>
+    <div class="shopping-item"><div class="item-title">Carne settimanale</div><div class="price">${(p.nutritionistReport||nutritionistReport(p.meals,p)).stats.meat}/${(p.nutritionistReport||nutritionistReport(p.meals,p)).targets.meat}</div></div>
+    <div class="shopping-item"><div class="item-title">Pesce settimanale</div><div class="price">${(p.nutritionistReport||nutritionistReport(p.meals,p)).stats.fish}/${(p.nutritionistReport||nutritionistReport(p.meals,p)).targets.fish}</div></div>
+    <div class="shopping-item"><div class="item-title">Legumi settimanali</div><div class="price">${(p.nutritionistReport||nutritionistReport(p.meals,p)).stats.legumes}/${(p.nutritionistReport||nutritionistReport(p.meals,p)).targets.legumes}</div></div>
+    <div class="shopping-item"><div class="item-title">Piatti con verdure</div><div class="price">${(p.nutritionistReport||nutritionistReport(p.meals,p)).stats.vegetables}/${(p.nutritionistReport||nutritionistReport(p.meals,p)).targets.vegetables}</div></div>
+    <div class="shopping-item"><div class="item-title">Correzioni nutrizionali</div><div class="price">${(p.nutritionistChanges||[]).length}</div></div>
     <div class="shopping-item"><div class="item-title">Chef Score</div><div class="price">${(p.chefScore||calculateChefScore(p)).total}/100</div></div>
     <div class="shopping-item"><div class="item-title">Valutazione menu</div><div class="price">${chefScoreLabel((p.chefScore||calculateChefScore(p)).total)}</div></div>
     <div class="shopping-item"><div class="item-title">Riutilizzo ingredienti</div><div class="price">${(p.chefScore||calculateChefScore(p)).reuse}/100</div></div>
