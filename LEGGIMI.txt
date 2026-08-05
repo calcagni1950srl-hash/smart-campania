@@ -182,3 +182,11 @@ VERSIONE 11.3 — PREZZI MEDI STABILI
 NOTA
 I prezzi sono stime indicative: non rappresentano listini ufficiali in tempo reale
 e possono variare in base a punto vendita, zona geografica, marca e periodo.
+
+
+CORREZIONE VERSIONE 11.4 — FRUTTA RIPRISTINATA
+- Migrazione automatica delle impostazioni salvate dalle vecchie versioni.
+- La categoria Frutta viene attivata una sola volta per chi aveva impostazioni precedenti.
+- I vecchi menu senza frutta vengono rimossi e devono essere rigenerati.
+- La frutta non viene più esclusa dalle regole pensate per primi, secondi e contorni.
+- Aggiornamento forzato dei file JavaScript e CSS per evitare la cache di GitHub Pages.

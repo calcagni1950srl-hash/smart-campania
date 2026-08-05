@@ -1423,10 +1423,15 @@ function renderBatchCookingPlan(plan){
 function fruitPoolForSeason(season,cats,style,prefs){
   if(!cats.includes("frutta")) return [];
 
-  return RECIPES.filter(recipe=>
+  const seasonal=RECIPES.filter(recipe=>
     recipe.type==="frutta" &&
-    recipeAllowed(recipe,cats,style,season,prefs)
+    (season==="inverno" || recipe.season.includes("estate")) &&
+    recipeRespectsPreferences(recipe,prefs)
   );
+
+  // La frutta è un fine pasto: non deve essere esclusa
+  // dalle regole pensate per primi, secondi e contorni.
+  return seasonal;
 }
 
 function buildFruitSequence(count,season,cats,style,prefs,pantry){
@@ -1707,6 +1712,10 @@ function buildPlan(){
     (dinner!=="fuori"?DAYS.length:0);
   const fruits=buildFruitSequence(fruitMealCount,season,cats,style,prefs,pantry);
   let fruitIndex=0;
+
+  if(cats.includes("frutta") && fruitMealCount>0 && !fruits.length){
+    console.warn("Frutta selezionata, ma nessun frutto compatibile è stato trovato.");
+  }
 
   if((firstCount&&!firsts.length)||(secondCount&&!seconds.length)||(sideCount&&!sides.length)){
     alert("Non è stato possibile creare il menu. Ricarica la pagina e riprova.");return
@@ -2669,6 +2678,7 @@ function saveSettings(){
   updateQuickSummary();
  updateSupermarketLogo();
  const s={
+  settingsVersion:2,
   supermarket:supermarket.value,people:people.value,budget:budget.value,lunch:lunch.value,
   dinner:dinner.value,style:style.value,season:season.value,cats:allowedCategories(),pantry:pantryItems(),prefs:foodPreferences()
  };
@@ -2678,6 +2688,21 @@ function loadSettings(){
  const raw=localStorage.getItem("smartCampaniaV2Settings"); if(!raw)return;
  try{
   const s=JSON.parse(raw);
+
+  // Migrazione una tantum delle impostazioni create prima
+  // dell'introduzione della frutta nel menu.
+  if((s.settingsVersion||0)<2){
+    const migratedCats=new Set(s.cats||[]);
+    migratedCats.add("frutta");
+    s.cats=[...migratedCats];
+    s.settingsVersion=2;
+    localStorage.setItem("smartCampaniaV2Settings",JSON.stringify(s));
+
+    // Un vecchio menu salvato non contiene la frutta: viene eliminato
+    // per evitare di mostrarlo come se fosse stato appena generato.
+    localStorage.removeItem("smartCampaniaV2Plan");
+  }
+
   ["supermarket","people","budget","lunch","dinner","style","season"].forEach(k=>{if(s[k]!=null)document.getElementById(k).value=s[k]});
   if(s.cats)document.querySelectorAll("[data-cat]").forEach(x=>x.checked=s.cats.includes(x.dataset.cat));
   if(s.pantry)document.querySelectorAll("[data-pantry]").forEach(x=>x.checked=s.pantry.includes(x.dataset.pantry));
