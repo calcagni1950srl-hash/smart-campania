@@ -3265,9 +3265,6 @@ function renderPlan(){
 
       return `<div class="meal-block">
         <div class="meal-title">${icon} ${label}</div>
-        <div class="meal-actions">
-          <button type="button" class="day-action-btn" onclick="replaceMeal(${dayIndex},'${mealKey}')">🔄 ${label}</button>
-        </div>
         ${recipes.map((r,recipeIndex)=>{
           const key=lockKey(dayIndex,mealKey,recipeIndex);
           const locked=!!locks[key];

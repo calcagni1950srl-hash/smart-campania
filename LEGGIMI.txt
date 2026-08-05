@@ -286,3 +286,10 @@ VERSIONE 12.0 — PANIERE BUDGET
 - Pranzo e cena rispettano esattamente le modalità selezionate.
 - Ricette diverse finché il database offre alternative compatibili.
 - Il numero di ingredienti diversi nel paniere è visibile nel riepilogo.
+
+
+VERSIONE 12.1 — TASTI CAMBIA PULITI
+- Rimosso il pulsante duplicato “Pranzo” o “Cena” sotto il titolo del pasto.
+- Resta il pulsante “Cambia” a destra di ogni singola ricetta.
+- Resta il pulsante “Giorno” per sostituire l’intera giornata.
+- Nessuna modifica al motore del budget, al paniere o alla lista della spesa.
