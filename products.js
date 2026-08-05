@@ -44,7 +44,35 @@ const PRODUCTS = {
   melagrana:{name:"Melagrane",cat:"frutta",pack:1000,unit:"g",prices:{conad:3.49,lidl:3.09,eurospin:2.79,sole365:3.19,piccolo:3.29,deco:3.39}},
   pompelmo:{name:"Pompelmi",cat:"frutta",pack:1000,unit:"g",prices:{conad:2.49,lidl:2.19,eurospin:1.99,sole365:2.29,piccolo:2.39,deco:2.45}},
   cachi:{name:"Cachi",cat:"frutta",pack:1000,unit:"g",prices:{conad:2.99,lidl:2.69,eurospin:2.39,sole365:2.79,piccolo:2.89,deco:2.95}},
-  fragole:{name:"Fragole",cat:"frutta",pack:500,unit:"g",prices:{conad:3.49,lidl:3.09,eurospin:2.79,sole365:3.19,piccolo:3.29,deco:3.39}}
+  fragole:{name:"Fragole",cat:"frutta",pack:500,unit:"g",prices:{conad:3.49,lidl:3.09,eurospin:2.79,sole365:3.19,piccolo:3.29,deco:3.39}},
+  // PRODOTTI AGGIUNTIVI PER LE RICETTE 13.x
+  olive:{name:"Olive",cat:"verdure",pack:250,unit:"g",prices:{conad:2.29,lidl:1.99,eurospin:1.79,sole365:2.09,piccolo:2.19,deco:2.25}},
+  pangrattato:{name:"Pangrattato",cat:"pasta",pack:500,unit:"g",prices:{conad:1.39,lidl:1.19,eurospin:0.99,sole365:1.25,piccolo:1.29,deco:1.35}},
+  rosmarino:{name:"Rosmarino",cat:"verdure",pack:20,unit:"g",prices:{conad:1.29,lidl:1.09,eurospin:0.99,sole365:1.19,piccolo:1.22,deco:1.25}},
+  tacchino:{name:"Fesa di tacchino",cat:"carne",pack:400,unit:"g",prices:{conad:6.49,lidl:5.89,eurospin:5.49,sole365:5.99,piccolo:6.09,deco:6.19}},
+  bistecche:{name:"Fettine di manzo",cat:"carne",pack:500,unit:"g",prices:{conad:9.49,lidl:8.79,eurospin:8.29,sole365:8.99,piccolo:9.09,deco:9.19}},
+  spezzatino:{name:"Spezzatino di manzo",cat:"carne",pack:500,unit:"g",prices:{conad:8.99,lidl:8.29,eurospin:7.89,sole365:8.49,piccolo:8.59,deco:8.69}},
+  piselli:{name:"Piselli",cat:"verdure",pack:450,unit:"g",prices:{conad:1.89,lidl:1.59,eurospin:1.39,sole365:1.69,piccolo:1.79,deco:1.85}},
+  origano:{name:"Origano",cat:"verdure",pack:20,unit:"g",prices:{conad:1.19,lidl:0.99,eurospin:0.89,sole365:1.09,piccolo:1.12,deco:1.15}},
+  pancetta:{name:"Pancetta a cubetti",cat:"carne",pack:150,unit:"g",prices:{conad:2.49,lidl:2.19,eurospin:1.99,sole365:2.29,piccolo:2.35,deco:2.39}},
+  limone:{name:"Limoni",cat:"frutta",pack:500,unit:"g",prices:{conad:1.49,lidl:1.29,eurospin:1.09,sole365:1.39,piccolo:1.42,deco:1.45}},
+  salmone:{name:"Filetti di salmone",cat:"pesce",pack:400,unit:"g",prices:{conad:7.99,lidl:7.29,eurospin:6.79,sole365:7.49,piccolo:7.59,deco:7.69}},
+  sgombro:{name:"Filetti di sgombro",cat:"pesce",pack:400,unit:"g",prices:{conad:4.49,lidl:3.99,eurospin:3.69,sole365:4.19,piccolo:4.29,deco:4.39}},
+  alici:{name:"Alici",cat:"pesce",pack:400,unit:"g",prices:{conad:4.99,lidl:4.49,eurospin:4.09,sole365:4.69,piccolo:4.79,deco:4.89}},
+  gamberi:{name:"Gamberi sgusciati",cat:"pesce",pack:300,unit:"g",prices:{conad:6.49,lidl:5.99,eurospin:5.49,sole365:6.19,piccolo:6.29,deco:6.39}},
+  calamari:{name:"Calamari",cat:"pesce",pack:400,unit:"g",prices:{conad:7.49,lidl:6.89,eurospin:6.39,sole365:7.09,piccolo:7.19,deco:7.29}},
+  rigatoni:{name:"Rigatoni",cat:"pasta",pack:500,unit:"g",prices:{conad:1.35,lidl:1.15,eurospin:0.95,sole365:1.19,piccolo:1.25,deco:1.29}},
+  ricotta:{name:"Ricotta",cat:"latticini",pack:250,unit:"g",prices:{conad:2.19,lidl:1.89,eurospin:1.69,sole365:1.99,piccolo:2.05,deco:2.09}},
+  fusilli:{name:"Fusilli",cat:"pasta",pack:500,unit:"g",prices:{conad:1.35,lidl:1.15,eurospin:0.95,sole365:1.19,piccolo:1.25,deco:1.29}},
+  linguine:{name:"Linguine",cat:"pasta",pack:500,unit:"g",prices:{conad:1.39,lidl:1.19,eurospin:0.99,sole365:1.25,piccolo:1.29,deco:1.35}},
+  pasta_integrale:{name:"Pasta integrale",cat:"pasta",pack:500,unit:"g",prices:{conad:1.69,lidl:1.39,eurospin:1.19,sole365:1.49,piccolo:1.55,deco:1.59}},
+  surgelati_misti:{name:"Funghi o verdure surgelate",cat:"verdure",pack:450,unit:"g",prices:{conad:2.49,lidl:2.19,eurospin:1.89,sole365:2.29,piccolo:2.35,deco:2.39}},
+  brodo:{name:"Brodo vegetale",cat:"verdure",pack:1000,unit:"ml",prices:{conad:1.49,lidl:1.29,eurospin:1.09,sole365:1.39,piccolo:1.42,deco:1.45}},
+  mais:{name:"Mais in scatola",cat:"verdure",pack:300,unit:"g",prices:{conad:1.39,lidl:1.19,eurospin:0.99,sole365:1.25,piccolo:1.29,deco:1.35}},
+  mozzarella:{name:"Mozzarella",cat:"latticini",pack:250,unit:"g",prices:{conad:2.79,lidl:2.39,eurospin:2.19,sole365:2.59,piccolo:2.65,deco:2.69}},
+  couscous:{name:"Cous cous",cat:"pasta",pack:500,unit:"g",prices:{conad:1.99,lidl:1.69,eurospin:1.49,sole365:1.79,piccolo:1.89,deco:1.95}},
+  orzo:{name:"Orzo perlato",cat:"pasta",pack:500,unit:"g",prices:{conad:1.79,lidl:1.49,eurospin:1.29,sole365:1.59,piccolo:1.69,deco:1.75}},
+  lasagne:{name:"Lasagne",cat:"pasta",pack:500,unit:"g",prices:{conad:2.49,lidl:2.19,eurospin:1.89,sole365:2.29,piccolo:2.39,deco:2.45}}
 };
 
 
@@ -312,6 +340,33 @@ function optimizePackCombination(key,qty,basePrice){
   };
 }
 
+const EXTRA_NUTRITION_1321 = {
+  olive:{kcal:145,protein:1,carbs:4,fat:15},
+  pangrattato:{kcal:350,protein:12,carbs:72,fat:4},
+  tacchino:{kcal:135,protein:29,carbs:0,fat:2},
+  bistecche:{kcal:220,protein:27,carbs:0,fat:12},
+  spezzatino:{kcal:210,protein:26,carbs:0,fat:11},
+  piselli:{kcal:81,protein:5,carbs:14,fat:.4},
+  pancetta:{kcal:400,protein:14,carbs:1,fat:39},
+  limone:{kcal:29,protein:1.1,carbs:9,fat:.3},
+  salmone:{kcal:208,protein:20,carbs:0,fat:13},
+  sgombro:{kcal:205,protein:19,carbs:0,fat:14},
+  alici:{kcal:131,protein:20,carbs:0,fat:5},
+  gamberi:{kcal:99,protein:24,carbs:.2,fat:.3},
+  calamari:{kcal:92,protein:16,carbs:3,fat:1.4},
+  rigatoni:{kcal:350,protein:12,carbs:72,fat:1.5},
+  fusilli:{kcal:350,protein:12,carbs:72,fat:1.5},
+  linguine:{kcal:350,protein:12,carbs:72,fat:1.5},
+  pasta_integrale:{kcal:340,protein:13,carbs:67,fat:2.5},
+  ricotta:{kcal:174,protein:11,carbs:3,fat:13},
+  brodo:{kcal:5,protein:.2,carbs:.6,fat:.1},
+  mais:{kcal:86,protein:3.2,carbs:19,fat:1.2},
+  mozzarella:{kcal:250,protein:18,carbs:2,fat:19},
+  couscous:{kcal:376,protein:13,carbs:77,fat:.6},
+  orzo:{kcal:354,protein:12,carbs:73,fat:2.3},
+  lasagne:{kcal:350,protein:12,carbs:72,fat:1.5}
+};
+
 const NUTRITION_PER_100 = {
   spaghetti:{kcal:350,protein:12,carbs:72,fat:1.5},
   penne:{kcal:350,protein:12,carbs:72,fat:1.5},
@@ -360,6 +415,7 @@ const NUTRITION_PER_100 = {
   cachi:{kcal:70,protein:.6,carbs:19,fat:.2},
   fragole:{kcal:32,protein:.7,carbs:8,fat:.3}
 };
+Object.assign(NUTRITION_PER_100,EXTRA_NUTRITION_1321);
 
 function ingredientNutrition(key,qty){
   const n=NUTRITION_PER_100[key];
