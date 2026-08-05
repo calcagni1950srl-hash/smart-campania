@@ -1668,76 +1668,67 @@ function rebalanceSimilarDays(meals,plan){
 }
 
 
-function mealHasFamily(meal,family){
-  return meal.some(recipe=>recipe.type==="secondo" && recipeFamily(recipe)===family);
-}
-
-function weekHasFamily(meals,family){
+function hasWeeklySecondFamily(meals,family){
   return meals.some(day=>
-    mealHasFamily(day.lunch,family) ||
-    mealHasFamily(day.dinner,family)
+    [...day.lunch,...day.dinner].some(
+      recipe=>recipe.type==="secondo" && recipeFamily(recipe)===family
+    )
   );
 }
 
-function chooseGuaranteedFamilyRecipe(family,plan,usedIds){
-  const pool=RECIPES.filter(recipe=>
-    recipe.type==="secondo" &&
-    recipeFamily(recipe)===family &&
-    recipeAllowed(recipe,plan.cats,plan.style,plan.season,plan.prefs)
+function enforceMinimumMeatAndFish(meals,context){
+  const families=["carne","pesce"];
+  const usedIds=new Set(
+    meals.flatMap(day=>[...day.lunch,...day.dinner]).map(recipe=>recipe.id)
   );
 
-  return pool
-    .filter(recipe=>!usedIds.has(recipe.id))
-    .sort((a,b)=>{
-      const pantryA=pantryPreferenceScore(a,plan.pantry||[]);
-      const pantryB=pantryPreferenceScore(b,plan.pantry||[]);
-      const recentA=longTermRecentRecipeIds().has(a.id)?1:0;
-      const recentB=longTermRecentRecipeIds().has(b.id)?1:0;
-      return (pantryB-recentB*3)-(pantryA-recentA*3) || Math.random()-.5;
-    })[0] || pool[0] || null;
-}
+  families.forEach(family=>{
+    if(hasWeeklySecondFamily(meals,family)) return;
 
-function enforceWeeklyMeatAndFish(meals,plan){
-  const usedIds=new Set(meals.flatMap(day=>[...day.lunch,...day.dinner]).map(r=>r.id));
+    const candidates=RECIPES.filter(recipe=>
+      recipe.type==="secondo" &&
+      recipeFamily(recipe)===family &&
+      recipeAllowed(recipe,context.cats,context.style,context.season,context.prefs)
+    ).filter(recipe=>!usedIds.has(recipe.id));
 
-  ["carne","pesce"].forEach(family=>{
-    if(weekHasFamily(meals,family)) return;
+    const replacement=candidates.sort((a,b)=>{
+      const scoreA=pantryPreferenceScore(a,context.pantry||[]);
+      const scoreB=pantryPreferenceScore(b,context.pantry||[]);
+      return scoreB-scoreA || Math.random()-.5;
+    })[0];
 
-    const replacement=chooseGuaranteedFamilyRecipe(family,plan,usedIds);
     if(!replacement) return;
 
-    // Preferisci una cena senza secondo di quella famiglia.
     let target=null;
 
-    for(let dayIndex=0;dayIndex<meals.length;dayIndex++){
+    for(let dayIndex=0;dayIndex<meals.length && !target;dayIndex++){
       for(const mealKey of ["dinner","lunch"]){
-        const meal=meals[dayIndex][mealKey];
-        const secondIndex=meal.findIndex(r=>r.type==="secondo" && r.type!=="frutta");
-
+        const secondIndex=meals[dayIndex][mealKey].findIndex(
+          recipe=>recipe.type==="secondo"
+        );
         if(secondIndex>=0){
-          const current=meal[secondIndex];
-          if(recipeFamily(current)!==family){
-            target={dayIndex,mealKey,secondIndex};
-            break;
-          }
+          target={dayIndex,mealKey,secondIndex};
+          break;
         }
       }
-      if(target) break;
     }
 
-    if(!target){
-      // Se il menu non contiene secondi, aggiungilo alla prima cena disponibile.
+    if(target){
+      meals[target.dayIndex][target.mealKey][target.secondIndex]=replacement;
+    }else{
       const dayIndex=meals.findIndex(day=>day.dinner.length>0);
       if(dayIndex>=0){
-        const fruitIndex=meals[dayIndex].dinner.findIndex(r=>r.type==="frutta");
-        if(fruitIndex>=0) meals[dayIndex].dinner.splice(fruitIndex,0,replacement);
-        else meals[dayIndex].dinner.push(replacement);
-        usedIds.add(replacement.id);
+        const fruitIndex=meals[dayIndex].dinner.findIndex(
+          recipe=>recipe.type==="frutta"
+        );
+        if(fruitIndex>=0){
+          meals[dayIndex].dinner.splice(fruitIndex,0,replacement);
+        }else{
+          meals[dayIndex].dinner.push(replacement);
+        }
       }
-      return;
     }
 
-    meals[target.dayIndex][target.mealKey][target.secondIndex]=replacement;
     usedIds.add(replacement.id);
   });
 
@@ -1851,7 +1842,7 @@ function buildPlan(){
   const urgencyOrderedMeals=reorderMealsByUrgency(meals,opened,pantry);
   const diversityPlanContext={cats,style,season,prefs,pantry,people,supermarket,portionScale:1};
   const diversityBalancedMeals=rebalanceSimilarDays(urgencyOrderedMeals,diversityPlanContext);
-  const familyBalancedMeals=enforceWeeklyMeatAndFish(diversityBalancedMeals,diversityPlanContext);
+  const familyBalancedMeals=enforceMinimumMeatAndFish(diversityBalancedMeals,diversityPlanContext);
   const optimized=optimizeMealsToBudget(familyBalancedMeals,people,supermarket,budget,cats,style,pantry,season,prefs);
 
   currentPlan={
@@ -2558,8 +2549,8 @@ function renderPlan(){
     <div class="shopping-item"><div class="item-title">Riutilizzo ingredienti</div><div class="price">${(p.chefScore||calculateChefScore(p)).reuse}/100</div></div>
     <div class="shopping-item"><div class="item-title">Riduzione sprechi</div><div class="price">${(p.chefScore||calculateChefScore(p)).waste}/100</div></div>
     <div class="shopping-item"><div class="item-title">Varietà reale del menu</div><div class="price">${p.varietyScore??weeklySimilarityScore(p.meals)}/100</div></div>
-    <div class="shopping-item"><div class="item-title">Carne presente nella settimana</div><div class="price">${weekHasFamily(p.meals,"carne")?"Sì":"No"}</div></div>
-    <div class="shopping-item"><div class="item-title">Pesce presente nella settimana</div><div class="price">${weekHasFamily(p.meals,"pesce")?"Sì":"No"}</div></div>
+    <div class="shopping-item"><div class="item-title">Carne nella settimana</div><div class="price">${hasWeeklySecondFamily(p.meals,"carne")?"Sì":"No"}</div></div>
+    <div class="shopping-item"><div class="item-title">Pesce nella settimana</div><div class="price">${hasWeeklySecondFamily(p.meals,"pesce")?"Sì":"No"}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti prioritari</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.shelfLife<=7).length}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti deperibili non usati</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.warning).length}</div></div>
     <div class="shopping-item"><div class="item-title">Ingredienti da preparare insieme</div><div class="price">${(p.batchCooking||buildBatchCookingPlan(p)).ingredientsOptimized}</div></div>

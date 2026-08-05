@@ -109,30 +109,6 @@ function ingredientPerishabilityScore(key, opened=false){
   return 1;
 }
 
-
-// Tagli di carne aggiuntivi per il nuovo ricettario
-if(!PRODUCTS.manzo){
-  PRODUCTS.manzo={name:"Carne di manzo",cat:"carne",pack:500,unit:"g",prices:{conad:8.90,lidl:8.20,eurospin:7.80,sole365:8.50,piccolo:8.40,deco:8.30}};
-}
-if(!PRODUCTS.maiale){
-  PRODUCTS.maiale={name:"Carne di maiale",cat:"carne",pack:500,unit:"g",prices:{conad:5.90,lidl:5.40,eurospin:5.10,sole365:5.60,piccolo:5.50,deco:5.45}};
-}
-if(!PRODUCTS.tacchino){
-  PRODUCTS.tacchino={name:"Fesa di tacchino",cat:"carne",pack:400,unit:"g",prices:{conad:6.40,lidl:5.90,eurospin:5.60,sole365:6.10,piccolo:6.00,deco:5.95}};
-}
-if(!PRODUCTS.vitello){
-  PRODUCTS.vitello={name:"Carne di vitello",cat:"carne",pack:500,unit:"g",prices:{conad:10.90,lidl:10.20,eurospin:9.80,sole365:10.50,piccolo:10.40,deco:10.30}};
-}
-if(!PRODUCTS.prosciutto){
-  PRODUCTS.prosciutto={name:"Prosciutto cotto",cat:"carne",pack:150,unit:"g",prices:{conad:2.90,lidl:2.50,eurospin:2.30,sole365:2.70,piccolo:2.65,deco:2.60}};
-}
-if(!PRODUCTS.funghi){
-  PRODUCTS.funghi={name:"Funghi",cat:"verdure",pack:300,unit:"g",prices:{conad:2.50,lidl:2.20,eurospin:1.95,sole365:2.35,piccolo:2.30,deco:2.25}};
-}
-if(!PRODUCTS.piselli){
-  PRODUCTS.piselli={name:"Piselli",cat:"verdure",pack:450,unit:"g",prices:{conad:1.90,lidl:1.65,eurospin:1.50,sole365:1.80,piccolo:1.75,deco:1.70}};
-}
-
 const PANTRY_CATALOG = {
   ...PRODUCTS,
   // FRUTTA FRESCA E SECCA

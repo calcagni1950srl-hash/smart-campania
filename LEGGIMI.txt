@@ -211,10 +211,11 @@ VERSIONE 11.6 — HOME COMPATTA
 - Nessuna funzione modificata.
 
 
-VERSIONE 11.7 — CARNE E PESCE GARANTITI
-- Aggiunti 36 nuovi secondi di carne.
-- Inserite bistecca, tagliata, fettine, pizzaiola, scaloppine, salsiccia, cotolette, pollo, tacchino, vitello, hamburger, polpette e polpettone.
-- Ogni settimana viene garantito almeno un pasto di carne.
-- Ogni settimana viene garantito almeno un pasto di pesce.
-- Le regole rispettano stagione, stile, preferenze e budget.
-- Evitate, quando possibile, ripetizioni ravvicinate.
+VERSIONE 11.6.1 — PRIMO BLOCCO CARNI
+- Aggiunte 5 ricette compatibili con il database prodotti esistente:
+  salsiccia alla piastra, salsiccia e friarielli, cotoletta di pollo,
+  hamburger alla piastra e polpette al sugo.
+- Nessun nuovo ingrediente tecnico introdotto.
+- Garantito almeno un secondo di carne a settimana.
+- Garantito almeno un secondo di pesce a settimana.
+- Aggiunto controllo nel riepilogo.
