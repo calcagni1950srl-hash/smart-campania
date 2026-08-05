@@ -190,3 +190,11 @@ CORREZIONE VERSIONE 11.4 — FRUTTA RIPRISTINATA
 - I vecchi menu senza frutta vengono rimossi e devono essere rigenerati.
 - La frutta non viene più esclusa dalle regole pensate per primi, secondi e contorni.
 - Aggiornamento forzato dei file JavaScript e CSS per evitare la cache di GitHub Pages.
+
+
+VERSIONE 11.5 — HOME PIÙ SNELLA
+- Eliminato il riquadro ripetitivo con Budget, Persone e Stagione.
+- Supermercato e Budget restano affiancati.
+- Persone e Stagione restano affiancati.
+- Recuperato spazio verticale nella colonna sinistra.
+- Motore, prezzi medi, frutta, ricette e tutte le funzioni restano invariati.

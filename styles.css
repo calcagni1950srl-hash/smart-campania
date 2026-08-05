@@ -1115,3 +1115,23 @@ select:focus,input:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(4
     to{opacity:1;transform:translateY(0)}
   }
 }
+
+
+/* Versione 11.5: home più snella */
+.home-hero{
+  margin-bottom:10px;
+}
+
+.mobile-summary{
+  margin-bottom:9px;
+}
+
+@media(max-width:520px){
+  .home-hero{
+    margin-bottom:8px;
+  }
+
+  .mobile-summary{
+    margin-bottom:7px;
+  }
+}
