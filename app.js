@@ -1837,6 +1837,130 @@ function weeklyStructureStatus(meals){
   };
 }
 
+
+function recipeEstimatedCostForPlan(recipe,context){
+  return recipeCost(
+    recipe,
+    context.people||1,
+    context.supermarket,
+    context.portionScale||1
+  );
+}
+
+function countSecondFamilies(meals){
+  const counts={carne:0,pesce:0};
+  meals.forEach(day=>{
+    [...day.lunch,...day.dinner].forEach(recipe=>{
+      if(recipe.type!=="secondo") return;
+      const family=recipeFamily(recipe);
+      if(family==="carne" || family==="pesce"){
+        counts[family]=(counts[family]||0)+1;
+      }
+    });
+  });
+  return counts;
+}
+
+function cheapestCompatibleReplacement(recipe,context,protectedFamily,nearbyRecipes,usedIds){
+  return candidatePoolForRecipe(recipe,context)
+    .filter(candidate=>!usedIds.has(candidate.id))
+    .filter(candidate=>{
+      if(protectedFamily){
+        return recipeFamily(candidate)===protectedFamily;
+      }
+      return true;
+    })
+    .filter(candidate=>
+      nearbyRecipes.every(prev=>recipeSimilarity(candidate,prev)<0.78)
+    )
+    .sort((a,b)=>
+      recipeEstimatedCostForPlan(a,context)-
+      recipeEstimatedCostForPlan(b,context)
+    )[0]||null;
+}
+
+function enforceFinalBudget(meals,context,budget){
+  let recalculated=calculateShopping(
+    meals,
+    context.people,
+    context.supermarket,
+    context.pantry||[],
+    context.portionScale||1
+  );
+
+  let attempts=0;
+
+  while(recalculated.spent>budget && attempts<80){
+    attempts++;
+
+    const familyCounts=countSecondFamilies(meals);
+    const usedIds=weeklyRecipeIds(meals);
+    const options=[];
+
+    meals.forEach((day,dayIndex)=>{
+      ["lunch","dinner"].forEach(mealKey=>{
+        day[mealKey].forEach((recipe,recipeIndex)=>{
+          if(recipe.type==="frutta") return;
+
+          const family=recipeFamily(recipe);
+          const protectedFamily=
+            (family==="carne" || family==="pesce") && familyCounts[family]<=1
+              ? family
+              : null;
+
+          const nearby=[];
+          for(let d=Math.max(0,dayIndex-2);d<=Math.min(meals.length-1,dayIndex+2);d++){
+            nearby.push(...meals[d].lunch,...meals[d].dinner);
+          }
+
+          const replacement=cheapestCompatibleReplacement(
+            recipe,
+            context,
+            protectedFamily,
+            nearby.filter(r=>r.id!==recipe.id),
+            usedIds
+          );
+
+          if(!replacement) return;
+
+          const saving=
+            recipeEstimatedCostForPlan(recipe,context)-
+            recipeEstimatedCostForPlan(replacement,context);
+
+          if(saving>0.05){
+            options.push({
+              dayIndex,mealKey,recipeIndex,replacement,saving
+            });
+          }
+        });
+      });
+    });
+
+    if(!options.length) break;
+
+    options.sort((a,b)=>b.saving-a.saving);
+    const best=options[0];
+    meals[best.dayIndex][best.mealKey][best.recipeIndex]=best.replacement;
+
+    recalculated=calculateShopping(
+      meals,
+      context.people,
+      context.supermarket,
+      context.pantry||[],
+      context.portionScale||1
+    );
+  }
+
+  return {
+    meals,
+    shopping:recalculated.shopping,
+    spent:recalculated.spent,
+    usedFromPantry:recalculated.usedFromPantry||{},
+    withinBudget:recalculated.spent<=budget,
+    attempts
+  };
+}
+
 function buildPlan(){
   const supermarket=document.getElementById("supermarket").value;
   const people=Math.max(1,parseInt(document.getElementById("people").value)||1);
@@ -1950,13 +2074,24 @@ function buildPlan(){
   // così carne e pesce non vengono eliminati dalle sostituzioni economiche.
   optimized.meals=enforceWeeklyStructure(optimized.meals,diversityPlanContext);
 
-  // Ricalcola la spesa sul menu definitivo.
-  const finalShopping=calculateShopping(
-    optimized.meals,people,supermarket,pantry,optimized.portionScale||1
+  const finalBudgetResult=enforceFinalBudget(
+    optimized.meals,
+    {
+      ...diversityPlanContext,
+      people,
+      supermarket,
+      pantry,
+      portionScale:optimized.portionScale||1
+    },
+    budget
   );
-  optimized.shopping=finalShopping.shopping;
-  optimized.spent=finalShopping.spent;
-  optimized.usedFromPantry=finalShopping.usedFromPantry||{};
+
+  optimized.meals=finalBudgetResult.meals;
+  optimized.shopping=finalBudgetResult.shopping;
+  optimized.spent=finalBudgetResult.spent;
+  optimized.usedFromPantry=finalBudgetResult.usedFromPantry;
+  optimized.withinBudget=finalBudgetResult.withinBudget;
+  optimized.finalBudgetAttempts=finalBudgetResult.attempts;
 
   currentPlan={
     id:Date.now(),
@@ -1969,6 +2104,8 @@ function buildPlan(){
     spent:optimized.spent,
     usedFromPantry:optimized.usedFromPantry||{},
     optimized:optimized.optimized,
+    withinBudget:optimized.withinBudget!==false,
+    finalBudgetAttempts:optimized.finalBudgetAttempts||0,
     reduced:optimized.reduced,
     portionScale:optimized.portionScale || 1,
     balanceStats:weeklyBalanceStats(optimized.meals),
@@ -2667,6 +2804,8 @@ function renderPlan(){
     <div class="shopping-item"><div class="item-title">Carne nella settimana</div><div class="price">${weeklyStructureStatus(p.meals).meat?"Sì":"No"}</div></div>
     <div class="shopping-item"><div class="item-title">Pesce nella settimana</div><div class="price">${weeklyStructureStatus(p.meals).fish?"Sì":"No"}</div></div>
     <div class="shopping-item"><div class="item-title">Ricette identiche ripetute</div><div class="price">${weeklyStructureStatus(p.meals).duplicateIds}</div></div>
+    <div class="shopping-item"><div class="item-title">Budget rispettato</div><div class="price">${p.spent<=p.budget?"Sì":"No"}</div></div>
+    <div class="shopping-item"><div class="item-title">Sostituzioni per il budget</div><div class="price">${p.finalBudgetAttempts||0}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti prioritari</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.shelfLife<=7).length}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti deperibili non usati</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.warning).length}</div></div>
     <div class="shopping-item"><div class="item-title">Ingredienti da preparare insieme</div><div class="price">${(p.batchCooking||buildBatchCookingPlan(p)).ingredientsOptimized}</div></div>

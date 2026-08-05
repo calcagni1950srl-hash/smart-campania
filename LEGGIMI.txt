@@ -228,3 +228,11 @@ VERSIONE 11.6.2 — PIANIFICATORE SETTIMANALE
 - Eliminazione delle ricette identiche ripetute, quando esistono alternative compatibili.
 - Maggiore distanza tra ricette molto simili.
 - Nuovo controllo “Ricette identiche ripetute” nel riepilogo.
+
+
+VERSIONE 11.6.3 — BUDGET RISPETTATO
+- Ottimizzazione finale dopo l’inserimento obbligatorio di carne e pesce.
+- Sostituzione delle ricette più costose con alternative compatibili più economiche.
+- Protezione dell’unico piatto di carne e dell’unico piatto di pesce.
+- Ricalcolo della lista della spesa dopo ogni sostituzione.
+- Nuove voci “Budget rispettato” e “Sostituzioni per il budget”.
