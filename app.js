@@ -295,14 +295,28 @@ function effectiveProductPrice(productKey,marketKey){
   };
 }
 
-function priceSourceText(item){
+function priceSourceInfo(item){
   if(item.priceSource==="online"){
     const valid=item.priceRecord?.valid_to
-      ? ` · valida fino al ${item.priceRecord.valid_to.split("-").reverse().join("/")}`
-      : "";
-    return `Prezzo reale/offerta ${item.marketName||""}${valid}`;
+      ? `Valido fino al ${item.priceRecord.valid_to.split("-").reverse().join("/")}`
+      : "Prezzo online senza scadenza indicata";
+
+    return {
+      label:"PREZZO REALE / OFFERTA",
+      detail:`${item.marketName||""}${item.priceRecord?.label?` · ${item.priceRecord.label}`:""} · ${valid}`,
+      type:"real"
+    };
   }
-  return "Prezzo medio stimato";
+
+  return {
+    label:"PREZZO MEDIO STIMATO",
+    detail:"Valore interno usato perché non è disponibile un prezzo reale attivo.",
+    type:"average"
+  };
+}
+
+function priceSourceText(item){
+  return priceSourceInfo(item).label;
 }
 
 function showPriceStatus(message,type="info"){
@@ -2497,7 +2511,13 @@ function renderPlan(){
                 <span class="item-title">${i.name}</span>
                 <span class="item-sub">Necessari ${Math.ceil(i.qty)} ${i.unit} · Acquista ${i.packDescription||(`${i.packs} confezioni`)}</span>
                 ${i.leftoverQty>0?`<span class="leftover">Residuo stimato: ${Math.ceil(i.leftoverQty)} ${i.unit}</span>`:""}
-                <span class="price-source ${i.priceSource==="online"?"real":"average"}">${priceSourceText(i)}</span>
+                ${(()=>{
+                  const source=priceSourceInfo(i);
+                  return `<span class="price-source-card ${source.type}">
+                    <strong>${source.type==="real"?"✓":"~"} ${source.label}</strong>
+                    <small>${source.detail}</small>
+                  </span>`;
+                })()}
               </span>
               <span class="price">${euro(i.total)}</span>
             </label>
@@ -2935,6 +2955,21 @@ document.getElementById("recipeModal").onclick=e=>{if(e.target.id==="recipeModal
 window.addEventListener("load",()=>{
  loadCachedOnlinePrices();
  updateOnlinePrices({silent:true});
+
+ // I piani salvati da versioni precedenti non contengono la provenienza
+ // del prezzo: li ricalcoliamo subito con la nuova struttura.
+ if(currentPlan){
+   const refreshed=calculateShopping(
+     currentPlan.meals,
+     currentPlan.people,
+     currentPlan.supermarket,
+     currentPlan.pantry||[],
+     currentPlan.portionScale||1
+   );
+   currentPlan.shopping=refreshed.shopping;
+   currentPlan.spent=refreshed.spent;
+   localStorage.setItem("smartCampaniaV2Plan",JSON.stringify(currentPlan));
+ }
  renderPantry();
  loadSettings();
  initMarketPicker();

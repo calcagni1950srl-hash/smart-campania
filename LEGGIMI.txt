@@ -178,3 +178,10 @@ NOVITÀ VERSIONE 11.0 — PREZZI ONLINE
 - La lista della spesa distingue prezzo reale e prezzo medio stimato.
 - In assenza di Internet vengono usati gli ultimi dati salvati o i prezzi medi.
 - Su GitHub Pages il file prices.json può essere aggiornato senza modificare il codice dell’app.
+
+
+CORREZIONE VERSIONE 11.1 — ORIGINE PREZZI VISIBILE
+- Aggiunto aggiornamento forzato di CSS e JavaScript per evitare la cache di GitHub Pages.
+- Ogni prodotto mostra una targhetta evidente “Prezzo reale/offerta” oppure “Prezzo medio stimato”.
+- Aggiunto il dettaglio della fonte e della validità.
+- I menu salvati dalle versioni precedenti vengono ricalcolati automaticamente.
