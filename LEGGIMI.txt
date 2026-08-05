@@ -301,3 +301,12 @@ VERSIONE 12.2 — VARIETÀ DEI PRIMI
 - Lo stesso formato viene riutilizzato solo quando non esistono alternative compatibili.
 - Aggiunto un controllo finale sui primi prima della generazione della lista della spesa.
 - Il budget continua a essere calcolato sul paniere reale.
+
+
+VERSIONE 12.3 — BUDGET PER SUPERMERCATO
+- Il paniere viene verificato usando i prezzi del supermercato selezionato.
+- Se il menu sfora, viene ricostruito con le ricette più economiche di quella catena.
+- La struttura pranzo/cena resta invariata.
+- Carne e pesce restano garantiti quando sono previsti secondi.
+- La frutta usa una sola varietà economica.
+- Se necessario vengono eliminati prima i contorni e poi ridotta la frequenza della frutta.
