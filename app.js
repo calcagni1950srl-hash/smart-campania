@@ -2481,12 +2481,17 @@ function recipeBaseFormat(recipe){
   const name=(recipe.name||"").toLowerCase();
 
   if(ingredients.includes("spaghetti") || name.includes("spaghetti")) return "spaghetti";
+  if(ingredients.includes("linguine") || name.includes("linguine")) return "linguine";
   if(ingredients.includes("penne") || name.includes("penne")) return "penne";
+  if(ingredients.includes("rigatoni") || name.includes("rigatoni")) return "rigatoni";
+  if(ingredients.includes("fusilli") || name.includes("fusilli")) return "fusilli";
+  if(ingredients.includes("pasta_integrale") || name.includes("integrale")) return "pasta_integrale";
   if(ingredients.includes("riso") || name.includes("riso") || name.includes("risotto")) return "riso";
   if(ingredients.includes("gnocchi") || name.includes("gnocchi")) return "gnocchi";
+  if(ingredients.includes("lasagne") || name.includes("lasagn")) return "lasagne";
+  if(ingredients.includes("couscous") || name.includes("cous cous") || name.includes("couscous")) return "couscous";
+  if(ingredients.includes("orzo") || name.includes("orzo")) return "orzo";
   if(ingredients.includes("pasta") || name.includes("pasta")) return "pasta_generica";
-  if(name.includes("lasagna")) return "lasagna";
-  if(name.includes("cous cous") || name.includes("couscous")) return "cous_cous";
   if(recipe.tags?.includes("legumi")) return "legumi";
   if(recipe.type==="secondo") return `secondo:${recipeProteinSubtype(recipe)}`;
   if(recipe.type==="contorno"){

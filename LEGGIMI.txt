@@ -326,3 +326,12 @@ VERSIONE 13.1 — BLOCCO 2 PESCE
 - Utilizzati esclusivamente ingredienti già presenti nel database prodotti.
 - Migliorata la rotazione tra i diversi tipi di pesce.
 - Budget, supermercati, dispensa e lista della spesa restano compatibili.
+
+
+VERSIONE 13.2 — BLOCCO 3 PRIMI
+- Aggiunti 40 nuovi primi.
+- Nuove ricette con rigatoni, fusilli, linguine, penne, spaghetti e pasta integrale.
+- Aggiunti risotti, gnocchi, cous cous, orzo e lasagne.
+- Migliorato il riconoscimento dei formati per evitare ripetizioni.
+- Utilizzati esclusivamente ingredienti già presenti nel database prodotti.
+- Budget, supermercati, dispensa e lista della spesa restano compatibili.
