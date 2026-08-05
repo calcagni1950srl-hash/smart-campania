@@ -235,189 +235,6 @@ function renderPantryQuantityInputs(){
   });
 }
 
-
-let ONLINE_PRICE_DB=null;
-let ACTIVE_ONLINE_PRICES={};
-
-function todayIsoDate(){
-  const now=new Date();
-  const year=now.getFullYear();
-  const month=String(now.getMonth()+1).padStart(2,"0");
-  const day=String(now.getDate()).padStart(2,"0");
-  return `${year}-${month}-${day}`;
-}
-
-function isPriceRecordActive(record,date=todayIsoDate()){
-  if(!record) return false;
-  if(record.valid_from && date<record.valid_from) return false;
-  if(record.valid_to && date>record.valid_to) return false;
-  return record.source_type!=="expired_offer_example";
-}
-
-function buildActiveOnlinePrices(database){
-  const active={};
-  const markets=database?.markets||{};
-
-  Object.entries(markets).forEach(([marketKey,market])=>{
-    Object.entries(market.products||{}).forEach(([productKey,record])=>{
-      if(!isPriceRecordActive(record)) return;
-      if(!active[marketKey]) active[marketKey]={};
-      active[marketKey][productKey]=record;
-    });
-  });
-
-  return active;
-}
-
-function effectiveProductPrice(productKey,marketKey){
-  const product=PRODUCTS[productKey];
-  const online=ACTIVE_ONLINE_PRICES?.[marketKey]?.[productKey];
-
-  if(online){
-    const targetPack=product.pack;
-    const sourcePack=parseFloat(online.pack)||targetPack;
-    const sourcePrice=parseFloat(online.price)||0;
-    const normalizedPrice=sourcePrice*(targetPack/sourcePack);
-
-    return {
-      price:normalizedPrice,
-      source:"online",
-      record:online,
-      label:online.label||product.name
-    };
-  }
-
-  return {
-    price:product.prices[marketKey],
-    source:"average",
-    record:null,
-    label:product.name
-  };
-}
-
-function priceSourceInfo(item){
-  if(item.priceSource==="online"){
-    const valid=item.priceRecord?.valid_to
-      ? `Valido fino al ${item.priceRecord.valid_to.split("-").reverse().join("/")}`
-      : "Prezzo online senza scadenza indicata";
-
-    return {
-      label:"PREZZO REALE / OFFERTA",
-      detail:`${item.marketName||""}${item.priceRecord?.label?` · ${item.priceRecord.label}`:""} · ${valid}`,
-      type:"real"
-    };
-  }
-
-  return {
-    label:"PREZZO MEDIO STIMATO",
-    detail:"Valore interno usato perché non è disponibile un prezzo reale attivo.",
-    type:"average"
-  };
-}
-
-function priceSourceText(item){
-  return priceSourceInfo(item).label;
-}
-
-function showPriceStatus(message,type="info"){
-  const box=document.getElementById("priceStatusBox");
-  if(!box) return;
-  box.hidden=false;
-  box.className=`price-status-box ${type}`;
-  box.textContent=message;
-}
-
-function updatePriceUi(database,active){
-  const count=Object.values(active||{}).reduce(
-    (sum,market)=>sum+Object.keys(market).length,0
-  );
-  const label=document.getElementById("priceUpdateLabel");
-  if(label){
-    label.textContent=count
-      ? `${count} prezzi reali attivi · ${database.updated_at?.slice(0,10).split("-").reverse().join("/")||""}`
-      : "Nessun prezzo reale attivo";
-  }
-}
-
-async function updateOnlinePrices({silent=false}={}){
-  const button=document.getElementById("updatePricesBtn");
-  const oldHtml=button?.innerHTML;
-
-  try{
-    if(button && !silent){
-      button.disabled=true;
-      button.innerHTML="<span>↻</span><span><strong>Aggiornamento...</strong><small>Controllo prices.json</small></span>";
-    }
-
-    const response=await fetch(`prices.json?v=${Date.now()}`,{cache:"no-store"});
-    if(!response.ok) throw new Error(`HTTP ${response.status}`);
-
-    const database=await response.json();
-    ONLINE_PRICE_DB=database;
-    ACTIVE_ONLINE_PRICES=buildActiveOnlinePrices(database);
-
-    localStorage.setItem("smartCampaniaOnlinePrices",JSON.stringify(database));
-    updatePriceUi(database,ACTIVE_ONLINE_PRICES);
-
-    const activeCount=Object.values(ACTIVE_ONLINE_PRICES)
-      .reduce((sum,market)=>sum+Object.keys(market).length,0);
-
-    if(!silent){
-      showPriceStatus(
-        activeCount
-          ? `Aggiornamento completato: ${activeCount} prezzi reali attivi. Gli altri prodotti continuano a usare i prezzi medi.`
-          : "Database scaricato, ma al momento non ci sono offerte reali ancora valide.",
-        activeCount?"success":"info"
-      );
-    }
-
-    if(currentPlan){
-      const recalculated=calculateShopping(
-        currentPlan.meals,currentPlan.people,currentPlan.supermarket,
-        currentPlan.pantry||[],currentPlan.portionScale||1
-      );
-      currentPlan.shopping=recalculated.shopping;
-      currentPlan.spent=recalculated.spent;
-      localStorage.setItem("smartCampaniaV2Plan",JSON.stringify(currentPlan));
-      renderPlan();
-    }
-  }catch(error){
-    console.error("Aggiornamento prezzi fallito:",error);
-
-    try{
-      const cached=JSON.parse(localStorage.getItem("smartCampaniaOnlinePrices")||"null");
-      if(cached){
-        ONLINE_PRICE_DB=cached;
-        ACTIVE_ONLINE_PRICES=buildActiveOnlinePrices(cached);
-        updatePriceUi(cached,ACTIVE_ONLINE_PRICES);
-        if(!silent) showPriceStatus("Connessione non disponibile: uso l’ultimo database prezzi salvato.","warning");
-        return;
-      }
-    }catch(e){}
-
-    if(!silent){
-      showPriceStatus("Impossibile aggiornare i prezzi. L’app continua a usare i prezzi medi interni.","warning");
-    }
-  }finally{
-    if(button && oldHtml){
-      button.disabled=false;
-      button.innerHTML=oldHtml;
-      updatePriceUi(ONLINE_PRICE_DB,ACTIVE_ONLINE_PRICES);
-    }
-  }
-}
-
-function loadCachedOnlinePrices(){
-  try{
-    const cached=JSON.parse(localStorage.getItem("smartCampaniaOnlinePrices")||"null");
-    if(cached){
-      ONLINE_PRICE_DB=cached;
-      ACTIVE_ONLINE_PRICES=buildActiveOnlinePrices(cached);
-      updatePriceUi(cached,ACTIVE_ONLINE_PRICES);
-    }
-  }catch(e){}
-}
-
 function calculateShopping(meals, people, supermarket, pantry=[], portionScale=1){
   const needs={};
   meals.forEach(d=>[...d.lunch,...d.dinner].forEach(r=>{
@@ -431,8 +248,7 @@ function calculateShopping(meals, people, supermarket, pantry=[], portionScale=1
   Object.entries(pantryUse.remainingNeeds).forEach(([k,qty])=>{
     if(qty<=0) return;
     const p=PRODUCTS[k];
-    const effective=effectiveProductPrice(k,supermarket);
-    const price=effective.price;
+    const price=p.prices[supermarket];
     const packPlan=optimizePackCombination(k,qty,price);
     const total=packPlan.totalCost;
     spent+=total;
@@ -446,10 +262,7 @@ function calculateShopping(meals, people, supermarket, pantry=[], portionScale=1
       department:productDepartment(k,p),
       packDescription:packPlan.description,
       purchasedQty:packPlan.totalQty,
-      leftoverQty:packPlan.waste,
-      priceSource:effective.source,
-      priceRecord:effective.record,
-      marketName:ONLINE_PRICE_DB?.markets?.[supermarket]?.display_name||supermarket
+      leftoverQty:packPlan.waste
     });
   });
 
@@ -459,7 +272,7 @@ function calculateShopping(meals, people, supermarket, pantry=[], portionScale=1
 function recipeEstimatedCost(recipe, people, supermarket){
   return Object.entries(recipe.ingredients).reduce((sum,[k,q])=>{
     const p=PRODUCTS[k];
-    return sum + ((q*people)/p.pack)*effectiveProductPrice(k,supermarket).price;
+    return sum + ((q*people)/p.pack)*p.prices[supermarket];
   },0);
 }
 
@@ -2511,13 +2324,6 @@ function renderPlan(){
                 <span class="item-title">${i.name}</span>
                 <span class="item-sub">Necessari ${Math.ceil(i.qty)} ${i.unit} · Acquista ${i.packDescription||(`${i.packs} confezioni`)}</span>
                 ${i.leftoverQty>0?`<span class="leftover">Residuo stimato: ${Math.ceil(i.leftoverQty)} ${i.unit}</span>`:""}
-                ${(()=>{
-                  const source=priceSourceInfo(i);
-                  return `<span class="price-source-card ${source.type}">
-                    <strong>${source.type==="real"?"✓":"~"} ${source.label}</strong>
-                    <small>${source.detail}</small>
-                  </span>`;
-                })()}
               </span>
               <span class="price">${euro(i.total)}</span>
             </label>
@@ -2921,8 +2727,6 @@ function printPanel(panelId,title){
   setTimeout(()=>panel.classList.remove("print-target"),200);
 }
 
-document.getElementById("updatePricesBtn").onclick=()=>updateOnlinePrices();
-
 document.getElementById("printShoppingBtn").onclick=()=>{
   if(!currentPlan){
     alert("Genera prima un piano settimanale.");
@@ -2953,23 +2757,6 @@ document.getElementById("resetBtn").onclick=()=>{
 document.getElementById("closeModal").onclick=()=>recipeModal.classList.remove("open");
 document.getElementById("recipeModal").onclick=e=>{if(e.target.id==="recipeModal")recipeModal.classList.remove("open")};
 window.addEventListener("load",()=>{
- loadCachedOnlinePrices();
- updateOnlinePrices({silent:true});
-
- // I piani salvati da versioni precedenti non contengono la provenienza
- // del prezzo: li ricalcoliamo subito con la nuova struttura.
- if(currentPlan){
-   const refreshed=calculateShopping(
-     currentPlan.meals,
-     currentPlan.people,
-     currentPlan.supermarket,
-     currentPlan.pantry||[],
-     currentPlan.portionScale||1
-   );
-   currentPlan.shopping=refreshed.shopping;
-   currentPlan.spent=refreshed.spent;
-   localStorage.setItem("smartCampaniaV2Plan",JSON.stringify(currentPlan));
- }
  renderPantry();
  loadSettings();
  initMarketPicker();

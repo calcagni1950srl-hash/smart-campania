@@ -170,26 +170,15 @@ CORREZIONE VERSIONE 10.9 — SELETTORE SUPERMERCATI STABILE
 - Se un logo web non si carica, la selezione continua comunque a funzionare.
 
 
-NOVITÀ VERSIONE 11.0 — PREZZI ONLINE
-- Nuovo file prices.json separato dall’app.
-- Pulsante “Aggiorna prezzi”.
-- Prima integrazione sperimentale con dati Lidl.
-- Le offerte scadute vengono ignorate automaticamente.
-- La lista della spesa distingue prezzo reale e prezzo medio stimato.
-- In assenza di Internet vengono usati gli ultimi dati salvati o i prezzi medi.
-- Su GitHub Pages il file prices.json può essere aggiornato senza modificare il codice dell’app.
+VERSIONE 11.3 — PREZZI MEDI STABILI
+- Rimosso il collegamento ai prezzi online.
+- Rimosso il file prices.json.
+- Rimosso il pulsante “Aggiorna prezzi”.
+- Rimosse le etichette “Prezzo reale/offerta” e “Prezzo medio stimato”.
+- Restano i prezzi medi interni, differenziati per supermercato.
+- L’app torna a funzionare completamente offline.
+- Selezione supermercato, budget, ricette, dispensa e lista della spesa restano invariati.
 
-
-CORREZIONE VERSIONE 11.1 — ORIGINE PREZZI VISIBILE
-- Aggiunto aggiornamento forzato di CSS e JavaScript per evitare la cache di GitHub Pages.
-- Ogni prodotto mostra una targhetta evidente “Prezzo reale/offerta” oppure “Prezzo medio stimato”.
-- Aggiunto il dettaglio della fonte e della validità.
-- I menu salvati dalle versioni precedenti vengono ricalcolati automaticamente.
-
-
-VERSIONE 11.2 — DATABASE PREZZI VERIFICATO
-- Inseriti esclusivamente prezzi supportati da fonti ufficiali.
-- Aggiunta copertura per ogni supermercato.
-- Aggiunte data di controllo e data di verifica per ogni prezzo.
-- I supermercati non ancora integrati continuano a usare i prezzi medi interni.
-- Nessun prezzo viene inventato o ricavato per approssimazione.
+NOTA
+I prezzi sono stime indicative: non rappresentano listini ufficiali in tempo reale
+e possono variare in base a punto vendita, zona geografica, marca e periodo.
