@@ -246,3 +246,12 @@ VERSIONE 11.6.4 — BUDGET E FRUTTA CORRETTI
 - Se necessario, vengono rimossi solo piatti aggiuntivi dai pasti più ricchi.
 - L’unico piatto di carne e l’unico piatto di pesce restano protetti.
 - La lista della spesa viene sempre ricalcolata sul menu definitivo.
+
+
+VERSIONE 11.6.5 — MENU BUDGET REALE
+- Se il menu normale supera il budget, viene ricostruita automaticamente una settimana economica.
+- Il menu economico usa ingredienti condivisi e un solo piatto principale per pasto.
+- Carne e pesce restano presenti.
+- La frutta compare una volta al giorno se selezionata.
+- La frutta utilizza poche varietà economiche per evitare confezioni inutili.
+- I contorni aggiuntivi vengono eliminati solo come ultimo intervento.

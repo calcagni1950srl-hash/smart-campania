@@ -2111,6 +2111,172 @@ function forceMenuWithinBudget(meals,context,budget,startScale=1){
   };
 }
 
+
+function recipeById(id){
+  return RECIPES.find(recipe=>recipe.id===id)||null;
+}
+
+function firstAvailableRecipe(ids,context){
+  for(const id of ids){
+    const recipe=recipeById(id);
+    if(!recipe) continue;
+
+    const seasonOk=context.season==="inverno" || recipe.season.includes("estate");
+    const preferenceOk=recipeRespectsPreferences(recipe,context.prefs);
+
+    if(seasonOk && preferenceOk) return recipe;
+  }
+  return null;
+}
+
+function buildBudgetFirstMenu(context){
+  const firstIds=[
+    "pasta_pomodoro",
+    "pasta_ceci",
+    "riso_lenticchie",
+    "pasta_fagioli_rapida",
+    "spaghetti_aglio_pomodoro",
+    "riso_pomodoro",
+    "pasta_patate_sugo"
+  ];
+
+  const secondIds=[
+    "uova_purgatorio",
+    "frittata_zucchine",
+    "hamburger_piastra_v1",
+    "pollo_limone",
+    "tonno_pomodoro",
+    "merluzzo_pomodoro",
+    "salsiccia_piastra_v1"
+  ];
+
+  const sideIds=[
+    "zucchine_rapide",
+    "pomodorini_rapidi",
+    "insalata_rapida",
+    "ceci_rapidi",
+    "broccoli_olio",
+    "patate_pomodoro",
+    "fagioli_pomodoro"
+  ];
+
+  const fruitIds=context.season==="estate"
+    ? ["frutta_banana","frutta_mela","frutta_pesca"]
+    : ["frutta_banana","frutta_mela","frutta_arancia"];
+
+  const firsts=firstIds.map(id=>firstAvailableRecipe([id],context)).filter(Boolean);
+  const seconds=secondIds.map(id=>firstAvailableRecipe([id],context)).filter(Boolean);
+  const sides=sideIds.map(id=>firstAvailableRecipe([id],context)).filter(Boolean);
+  const fruits=fruitIds.map(id=>firstAvailableRecipe([id],context)).filter(Boolean);
+
+  const meals=[];
+
+  DAYS.forEach((day,dayIndex)=>{
+    const lunch=[];
+    const dinner=[];
+
+    // Un solo piatto principale a pasto per contenere realmente la spesa.
+    if(dayIndex%2===0){
+      if(firsts.length) lunch.push(firsts[dayIndex%firsts.length]);
+      if(seconds.length) dinner.push(seconds[dayIndex%seconds.length]);
+    }else{
+      if(seconds.length) lunch.push(seconds[dayIndex%seconds.length]);
+      if(firsts.length) dinner.push(firsts[dayIndex%firsts.length]);
+    }
+
+    // Contorno solo in alcuni pasti, usando ingredienti condivisi.
+    if(sides.length && dayIndex%3===0){
+      dinner.push(sides[dayIndex%sides.length]);
+    }
+
+    // Una frutta al giorno, scegliendo al massimo 2-3 varietà economiche.
+    if(context.cats.includes("frutta") && fruits.length){
+      const fruit=fruits[dayIndex%fruits.length];
+      const target=dayIndex%2===0 ? lunch : dinner;
+      target.push(fruit);
+    }
+
+    meals.push({day,lunch,dinner});
+  });
+
+  // Garanzia reale di carne e pesce.
+  const meat=firstAvailableRecipe(
+    ["hamburger_piastra_v1","pollo_limone","salsiccia_piastra_v1"],
+    context
+  );
+  const fish=firstAvailableRecipe(
+    ["tonno_pomodoro","merluzzo_pomodoro","tonno_insalata"],
+    context
+  );
+
+  if(meat){
+    meals[1].dinner=meals[1].dinner.filter(r=>r.type!=="secondo");
+    const fruit=meals[1].dinner.find(r=>r.type==="frutta");
+    meals[1].dinner=fruit?[meat,fruit]:[meat];
+  }
+
+  if(fish){
+    meals[4].dinner=meals[4].dinner.filter(r=>r.type!=="secondo");
+    const fruit=meals[4].dinner.find(r=>r.type==="frutta");
+    meals[4].dinner=fruit?[fish,fruit]:[fish];
+  }
+
+  return meals;
+}
+
+function forceBudgetFirstFallback(context,budget){
+  let meals=buildBudgetFirstMenu(context);
+  let portionScale=1;
+  let result=calculateShopping(
+    meals,
+    context.people,
+    context.supermarket,
+    context.pantry||[],
+    portionScale
+  );
+
+  const scales=[0.95,0.90,0.85,0.80,0.75,0.70,0.65,0.60,0.55,0.50];
+
+  for(const scale of scales){
+    if(result.spent<=budget) break;
+
+    portionScale=scale;
+    result=calculateShopping(
+      meals,
+      context.people,
+      context.supermarket,
+      context.pantry||[],
+      portionScale
+    );
+  }
+
+  // Ultimo adattamento: elimina soltanto i contorni aggiuntivi.
+  if(result.spent>budget){
+    meals.forEach(day=>{
+      day.lunch=day.lunch.filter(r=>r.type!=="contorno");
+      day.dinner=day.dinner.filter(r=>r.type!=="contorno");
+    });
+
+    result=calculateShopping(
+      meals,
+      context.people,
+      context.supermarket,
+      context.pantry||[],
+      portionScale
+    );
+  }
+
+  return {
+    meals,
+    shopping:result.shopping,
+    spent:result.spent,
+    usedFromPantry:result.usedFromPantry||{},
+    portionScale,
+    withinBudget:result.spent<=budget,
+    budgetFallback:true
+  };
+}
+
 function buildPlan(){
   const supermarket=document.getElementById("supermarket").value;
   const people=Math.max(1,parseInt(document.getElementById("people").value)||1);
@@ -2120,6 +2286,8 @@ function buildPlan(){
   const style=document.getElementById("style").value;
   const season=document.getElementById("season").value;
   const cats=allowedCategories();
+  const fruitCheckbox=document.querySelector('[data-cat="frutta"]');
+  if(fruitCheckbox?.checked && !cats.includes("frutta")) cats.push("frutta");
   const pantry=pantryItems();
   const opened=openedPantryItems();
   const prefs=foodPreferences();
@@ -2236,6 +2404,22 @@ function buildPlan(){
   optimized.finalBudgetAttempts=(optimized.finalBudgetAttempts||0)+forcedBudget.removedDishes;
   optimized.reduced=optimized.reduced||forcedBudget.reducedPortions;
   optimized.removedDishes=forcedBudget.removedDishes;
+  optimized.budgetFallback=false;
+
+  // Se il normale motore non basta, ricostruisce l'intera settimana
+  // usando una spesa economica e ingredienti condivisi.
+  if(optimized.spent>budget){
+    const fallback=forceBudgetFirstFallback(finalContext,budget);
+
+    optimized.meals=fallback.meals;
+    optimized.shopping=fallback.shopping;
+    optimized.spent=fallback.spent;
+    optimized.usedFromPantry=fallback.usedFromPantry;
+    optimized.portionScale=fallback.portionScale;
+    optimized.withinBudget=fallback.withinBudget;
+    optimized.budgetFallback=true;
+    optimized.removedDishes=0;
+  }
 
   currentPlan={
     id:Date.now(),
@@ -2251,6 +2435,7 @@ function buildPlan(){
     withinBudget:optimized.withinBudget!==false,
     finalBudgetAttempts:optimized.finalBudgetAttempts||0,
     removedDishes:optimized.removedDishes||0,
+    budgetFallback:optimized.budgetFallback||false,
     reduced:optimized.reduced,
     portionScale:optimized.portionScale || 1,
     balanceStats:weeklyBalanceStats(optimized.meals),
@@ -2953,6 +3138,7 @@ function renderPlan(){
     <div class="shopping-item"><div class="item-title">Sostituzioni per il budget</div><div class="price">${p.finalBudgetAttempts||0}</div></div>
     <div class="shopping-item"><div class="item-title">Piatti rimossi per il budget</div><div class="price">${p.removedDishes||0}</div></div>
     <div class="shopping-item"><div class="item-title">Giorni con frutta</div><div class="price">${p.meals.filter(d=>[...d.lunch,...d.dinner].some(r=>r.type==="frutta")).length}/7</div></div>
+    <div class="shopping-item"><div class="item-title">Menu economico automatico</div><div class="price">${p.budgetFallback?"Sì":"No"}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti prioritari</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.shelfLife<=7).length}</div></div>
     <div class="shopping-item"><div class="item-title">Prodotti deperibili non usati</div><div class="price">${(p.expiryPlan||buildExpiryPlan(p)).filter(x=>x.warning).length}</div></div>
     <div class="shopping-item"><div class="item-title">Ingredienti da preparare insieme</div><div class="price">${(p.batchCooking||buildBatchCookingPlan(p)).ingredientsOptimized}</div></div>
