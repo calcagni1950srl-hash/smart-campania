@@ -2459,6 +2459,13 @@ function projectedBasketCost(meals,slot,recipe,context,portionScale){
 function recipeProteinSubtype(recipe){
   const ingredients=Object.keys(recipe.ingredients||{});
   const tags=recipe.tags||[];
+  if(tags.includes("merluzzo") || ingredients.includes("merluzzo")) return "merluzzo";
+  if(tags.includes("salmone") || ingredients.includes("salmone")) return "salmone";
+  if(tags.includes("tonno") || ingredients.includes("tonno")) return "tonno";
+  if(tags.includes("sgombro") || ingredients.includes("sgombro")) return "sgombro";
+  if(tags.includes("alici") || ingredients.includes("alici")) return "alici";
+  if(tags.includes("gamberi") || ingredients.includes("gamberi")) return "gamberi";
+  if(tags.includes("calamari") || ingredients.includes("calamari")) return "calamari";
 
   if(tags.includes("pollo") || ingredients.includes("pollo")) return "pollo";
   if(tags.includes("tacchino") || ingredients.includes("tacchino")) return "tacchino";

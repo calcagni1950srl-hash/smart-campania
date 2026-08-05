@@ -318,3 +318,11 @@ VERSIONE 13.0 — BLOCCO 1 CARNE
 - Utilizzati esclusivamente ingredienti già presenti nel database prodotti.
 - Migliorata la rotazione tra pollo, tacchino, manzo, maiale e macinato.
 - Budget, supermercati, dispensa e lista della spesa restano compatibili.
+
+
+VERSIONE 13.1 — BLOCCO 2 PESCE
+- Aggiunte 30 nuove ricette di pesce.
+- Nuove varianti di merluzzo, salmone, tonno, sgombro, alici, gamberi e calamari.
+- Utilizzati esclusivamente ingredienti già presenti nel database prodotti.
+- Migliorata la rotazione tra i diversi tipi di pesce.
+- Budget, supermercati, dispensa e lista della spesa restano compatibili.
