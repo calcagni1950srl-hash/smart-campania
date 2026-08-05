@@ -396,3 +396,12 @@ VERSIONE 13.7.1 — CORREZIONE GENERAZIONE
 - La voce “Aperto” non ricompare nell’interfaccia.
 - La dispensa continua a funzionare esclusivamente in base ai prodotti selezionati e alle quantità disponibili.
 - Budget, memoria, nutrizionista e lista della spesa restano invariati.
+
+
+VERSIONE 13.8 — INTERFACCIA UNIFORME
+- Uniformati colori, bordi, ombre e raggi di tutte le schede.
+- Migliorata la gerarchia visiva di titoli, riepiloghi e pulsanti.
+- Resi coerenti pulsanti principali, secondari e tasti di cambio.
+- Migliorata la leggibilità di menu, lista della spesa, riepilogo e dispensa.
+- Ottimizzata la visualizzazione su smartphone.
+- Nessuna modifica alla logica di budget, ricette, memoria, nutrizionista o dispensa.
