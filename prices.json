@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-08-05T10:00:00+02:00",
+  "area": "Maddaloni-Caserta",
+  "notes": "Prima integrazione sperimentale. Le offerte scadute vengono ignorate automaticamente.",
+  "markets": {
+    "lidl": {
+      "display_name": "Lidl",
+      "source_name": "Lidl Italia",
+      "products": {
+        "salsiccia": {
+          "price": 3.69,
+          "pack": 300,
+          "unit": "g",
+          "price_per_kg": 12.3,
+          "source_type": "real_offer",
+          "valid_from": "2026-07-30",
+          "valid_to": "2026-08-05",
+          "label": "Salsiccette con vitello",
+          "source_url": "https://www.lidl.it/p/salsiccette-con-vitello/p11140713"
+        },
+        "banana": {
+          "price": 0.98,
+          "pack": 1000,
+          "unit": "g",
+          "price_per_kg": 0.98,
+          "source_type": "real_price",
+          "valid_from": "2026-07-04",
+          "valid_to": null,
+          "label": "Banane sfuse",
+          "source_url": "https://www.lidl.it/"
+        },
+        "patate": {
+          "price": 1.99,
+          "pack": 2000,
+          "unit": "g",
+          "price_per_kg": 1.0,
+          "source_type": "expired_offer_example",
+          "valid_from": "2026-07-27",
+          "valid_to": "2026-07-29",
+          "label": "Patate novelle",
+          "source_url": "https://www.lidl.it/"
+        }
+      }
+    }
+  }
+}

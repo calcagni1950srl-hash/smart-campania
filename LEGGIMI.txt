@@ -168,3 +168,13 @@ CORREZIONE VERSIONE 10.9 — SELETTORE SUPERMERCATI STABILE
 - Tocchi il supermercato e la finestra si chiude automaticamente.
 - Il valore continua a essere usato da prezzi, budget e lista della spesa.
 - Se un logo web non si carica, la selezione continua comunque a funzionare.
+
+
+NOVITÀ VERSIONE 11.0 — PREZZI ONLINE
+- Nuovo file prices.json separato dall’app.
+- Pulsante “Aggiorna prezzi”.
+- Prima integrazione sperimentale con dati Lidl.
+- Le offerte scadute vengono ignorate automaticamente.
+- La lista della spesa distingue prezzo reale e prezzo medio stimato.
+- In assenza di Internet vengono usati gli ultimi dati salvati o i prezzi medi.
+- Su GitHub Pages il file prices.json può essere aggiornato senza modificare il codice dell’app.

@@ -178,9 +178,14 @@
           <button class="tab" data-tab="recipes">Ricette</button>
         </div>
         <div class="result-actions">
+          <button class="price-update-btn" id="updatePricesBtn" type="button">
+            <span>↻</span>
+            <span><strong>Aggiorna prezzi</strong><small id="priceUpdateLabel">Prezzi medi attivi</small></span>
+          </button>
           <button class="secondary" id="printShoppingBtn" type="button">Stampa spesa</button>
           <button class="secondary" id="printMenuBtn" type="button">Stampa menu</button>
         </div>
+        <div id="priceStatusBox" class="price-status-box" hidden></div>
 
         <section id="shopping" class="panel active"><div class="empty">Premi “Genera piano settimanale”.</div></section>
         <section id="menu" class="panel"><div class="empty">Il menu apparirà qui.</div></section>
