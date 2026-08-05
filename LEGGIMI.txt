@@ -310,3 +310,11 @@ VERSIONE 12.3 — BUDGET PER SUPERMERCATO
 - Carne e pesce restano garantiti quando sono previsti secondi.
 - La frutta usa una sola varietà economica.
 - Se necessario vengono eliminati prima i contorni e poi ridotta la frequenza della frutta.
+
+
+VERSIONE 13.0 — BLOCCO 1 CARNE
+- Aggiunte 30 nuove ricette di carne.
+- Nuove varianti di pollo, tacchino, manzo, salsiccia e carne macinata.
+- Utilizzati esclusivamente ingredienti già presenti nel database prodotti.
+- Migliorata la rotazione tra pollo, tacchino, manzo, maiale e macinato.
+- Budget, supermercati, dispensa e lista della spesa restano compatibili.

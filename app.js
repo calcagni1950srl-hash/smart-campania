@@ -2456,6 +2456,19 @@ function projectedBasketCost(meals,slot,recipe,context,portionScale){
 }
 
 
+function recipeProteinSubtype(recipe){
+  const ingredients=Object.keys(recipe.ingredients||{});
+  const tags=recipe.tags||[];
+
+  if(tags.includes("pollo") || ingredients.includes("pollo")) return "pollo";
+  if(tags.includes("tacchino") || ingredients.includes("tacchino")) return "tacchino";
+  if(tags.includes("manzo") || ingredients.includes("bistecche") || ingredients.includes("spezzatino")) return "manzo";
+  if(tags.includes("maiale") || ingredients.includes("salsiccia") || ingredients.includes("pancetta")) return "maiale";
+  if(tags.includes("macinato") || ingredients.includes("macinato")) return "macinato";
+  if(recipe.tags?.includes("pesce")) return "pesce";
+  return recipeFamily(recipe);
+}
+
 function recipeBaseFormat(recipe){
   const ingredients=Object.keys(recipe.ingredients||{});
   const name=(recipe.name||"").toLowerCase();
@@ -2468,7 +2481,7 @@ function recipeBaseFormat(recipe){
   if(name.includes("lasagna")) return "lasagna";
   if(name.includes("cous cous") || name.includes("couscous")) return "cous_cous";
   if(recipe.tags?.includes("legumi")) return "legumi";
-  if(recipe.type==="secondo") return `secondo:${recipeFamily(recipe)}`;
+  if(recipe.type==="secondo") return `secondo:${recipeProteinSubtype(recipe)}`;
   if(recipe.type==="contorno"){
     const veg=ingredients.find(key=>
       ["zucchine","melanzane","broccoli","cavolfiore","spinaci","peperoni","patate","insalata","pomodorini","fagioli","ceci","lenticchie"].includes(key)
