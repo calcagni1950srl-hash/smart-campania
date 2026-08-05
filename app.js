@@ -4,6 +4,13 @@ let currentPlan=null;
 const euro=n=>new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"}).format(n);
 function allowedCategories(){return [...document.querySelectorAll("[data-cat]:checked")].map(x=>x.dataset.cat)}
 function pantryItems(){return [...document.querySelectorAll("[data-pantry]:checked")].map(x=>x.dataset.pantry)}
+
+/* Compatibilità interna dopo la rimozione dello stato “Aperto”.
+   Chef AI continua a funzionare trattando tutti i prodotti solo in base
+   alla quantità disponibile in dispensa. */
+function openedPantryItems(){return []}
+function saveOpenedPantry(){return}
+
 function foodPreferences(){
   return {
     avoidFish:document.getElementById("avoid-fish").checked,
@@ -3442,6 +3449,7 @@ function buildPlan(){
   currentPlan={
     id:Date.now(),
     supermarket,people,budget,lunch,dinner,style,season,cats,pantry,prefs,
+    opened:[],
     pantryCommitted:false,
     pantryCommitDate:null,
     pantryCommitDetails:[],

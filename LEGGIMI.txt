@@ -388,3 +388,11 @@ VERSIONE 13.7 — DISPENSA SENZA “APERTO”
 - Se una quantità è sufficiente, il prodotto non viene ricomprato.
 - Se non è sufficiente, viene acquistata solo la quantità mancante secondo le confezioni disponibili.
 - Il pannello Dispensa è ora più compatto e leggibile.
+
+
+VERSIONE 13.7.1 — CORREZIONE GENERAZIONE
+- Corretto l’errore che compariva premendo “Genera menu”.
+- Ripristinata una funzione tecnica di compatibilità usata internamente da Chef AI.
+- La voce “Aperto” non ricompare nell’interfaccia.
+- La dispensa continua a funzionare esclusivamente in base ai prodotti selezionati e alle quantità disponibili.
+- Budget, memoria, nutrizionista e lista della spesa restano invariati.
