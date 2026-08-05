@@ -369,3 +369,13 @@ VERSIONE 13.5 — DISPENSA UNIFICATA
 - La sezione Scorte resta consultabile ma diventa solo informativa.
 - Dopo l’operazione compare un riepilogo con scorte aggiunte e prodotti scalati.
 - Il pulsante non può essere usato due volte sullo stesso menu.
+
+
+VERSIONE 13.6 — PANNELLO DISPENSA RIDISEGNATO
+- Prodotti mostrati in righe larghe e leggibili.
+- Nome, quantità, unità e stato “Aperto” non si sovrappongono più.
+- Eliminata la comparsa della scritta “undefined”.
+- Aggiunti icone per categoria e feedback visivo sui prodotti selezionati.
+- Nuovo ordinamento A–Z, selezionati prima o quantità maggiore.
+- Conteggio semplificato dei prodotti in dispensa.
+- Ricerca, categorie, quantità, selezione e azzeramento restano funzionanti.

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Campania Budget Pro</title>
-<link rel="stylesheet" href="styles.css?v=13.5">
+<link rel="stylesheet" href="styles.css?v=13.6">
 </head>
 <body>
 <div class="app">
@@ -13,7 +13,7 @@
       <h1>Smart Campania Budget Pro</h1>
       <p>Menu, spesa e ricette in pochi tocchi</p>
     </div>
-    <div class="version">Versione 13.5 dispensa unificata</div>
+    <div class="version">Versione 13.6 pannello dispensa</div>
   </div>
 
   <div class="grid">
@@ -131,18 +131,44 @@
         </div>
       </details>
 
-      <details class="advanced-box">
-        <summary>Dispensa</summary>
-        <div class="pantry-toolbar">
-          <input id="pantrySearch" class="pantry-search" type="search" placeholder="Cerca prodotto...">
+      <details class="advanced-box pantry-panel">
+        <summary><span class="pantry-summary-icon">▣</span> Dispensa</summary>
+
+        <div class="pantry-toolbar pantry-toolbar-redesign">
+          <div class="pantry-search-wrap">
+            <span aria-hidden="true">⌕</span>
+            <input id="pantrySearch" class="pantry-search" type="search" placeholder="Cerca un prodotto...">
+          </div>
+
           <div class="pantry-actions">
-            <button type="button" class="small-btn" id="selectVisiblePantry">Seleziona</button>
-            <button type="button" class="small-btn" id="clearPantry">Azzera</button>
+            <button type="button" class="small-btn pantry-select-btn" id="selectVisiblePantry">✓ Seleziona visibili</button>
+            <button type="button" class="small-btn" id="clearPantry">↻ Azzera</button>
           </div>
         </div>
+
         <div class="pantry-categories" id="pantryCategories"></div>
-        <div class="pantry-count" id="pantryCount">0 prodotti selezionati</div>
-        <div class="pantry-grid" id="pantryGrid"></div>
+
+        <div class="pantry-list-header">
+          <div class="pantry-count" id="pantryCount">0 prodotti in dispensa</div>
+          <label class="pantry-sort-label">
+            <span>Ordina</span>
+            <select id="pantrySort" class="pantry-sort">
+              <option value="az">A–Z</option>
+              <option value="selected">Selezionati prima</option>
+              <option value="quantity">Quantità maggiore</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="pantry-grid pantry-list" id="pantryGrid"></div>
+
+        <div class="pantry-tip">
+          <span class="pantry-tip-icon">💡</span>
+          <div>
+            <strong>Consiglio</strong>
+            <p>Seleziona un prodotto e indica la quantità disponibile. Il menu userà prima ciò che hai già in casa.</p>
+          </div>
+        </div>
       </details>
 
       <div class="main-action">
@@ -240,9 +266,9 @@
   </div>
 </div>
 
-<script src="products.js?v=13.5"></script>
-<script src="recipes.js?v=13.5"></script>
-<script src="app.js?v=13.5"></script>
+<script src="products.js?v=13.6"></script>
+<script src="recipes.js?v=13.6"></script>
+<script src="app.js?v=13.6"></script>
 
 <div class="market-modal" id="marketModal" aria-hidden="true">
   <div class="market-modal-backdrop" data-close-market></div>

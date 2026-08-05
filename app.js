@@ -40,43 +40,151 @@ function pantryProductCategory(product){
   return product.cat || "dispensa";
 }
 
+function pantryDisplayUnit(product){
+  const unit=String(product?.unit||"").trim();
+  if(unit) return unit;
+
+  const category=pantryProductCategory(product);
+  if(["condimenti","conserve"].includes(category)) return "pz";
+  if(category==="latticini") return "g";
+  if(["carne","pesce","verdure","frutta","pasta","legumi","dispensa"].includes(category)) return "g";
+  return "pz";
+}
+
+function pantryProductIcon(product){
+  const category=pantryProductCategory(product);
+  const icons={
+    verdure:"🥬",
+    frutta:"🍎",
+    carne:"🥩",
+    pesce:"🐟",
+    latticini:"🥛",
+    pasta:"🍝",
+    legumi:"🫘",
+    condimenti:"🫒",
+    conserve:"🥫",
+    surgelati:"❄️",
+    pane:"🥖",
+    dispensa:"📦"
+  };
+  return icons[category]||"📦";
+}
+
+function pantryQuantityText(key,product){
+  const quantity=pantryQuantity(key);
+  if(quantity<=0) return "Quantità non indicata";
+  return `Disponibili: ${quantity} ${pantryDisplayUnit(product)}`;
+}
+
+function sortedPantryEntries(){
+  const quantities=loadPantryQuantities();
+  const selected=new Set(pantryItems());
+  const mode=document.getElementById("pantrySort")?.value||"az";
+
+  return Object.entries(PANTRY_CATALOG).sort((a,b)=>{
+    const [keyA,productA]=a;
+    const [keyB,productB]=b;
+
+    if(mode==="selected"){
+      const selectedDifference=Number(selected.has(keyB))-Number(selected.has(keyA));
+      if(selectedDifference) return selectedDifference;
+    }
+
+    if(mode==="quantity"){
+      const quantityDifference=(parseFloat(quantities[keyB])||0)-(parseFloat(quantities[keyA])||0);
+      if(quantityDifference) return quantityDifference;
+    }
+
+    return productA.name.localeCompare(productB.name,"it");
+  });
+}
+
 function renderPantry(){
   const grid=document.getElementById("pantryGrid");
-  const cats=["all",...new Set(Object.values(PANTRY_CATALOG).map(p=>pantryProductCategory(p)))];
-  document.getElementById("pantryCategories").innerHTML=cats.map(cat=>
-    `<button type="button" class="pantry-cat ${cat===activePantryCategory?"active":""}" data-pantry-cat="${PANTRY_CATEGORY_LABELS[cat]||cat}">${PANTRY_CATEGORY_LABELS[cat]||cat}</button>`
-  ).join("");
+  const selectedBefore=new Set(pantryItems());
+  const openedBefore=new Set(openedPantryItems());
+  const quantities=loadPantryQuantities();
 
-  grid.innerHTML=Object.entries(PANTRY_CATALOG)
-    .sort((a,b)=>a[1].name.localeCompare(b[1].name,"it"))
-    .map(([key,p])=>`<div class="pantry-item pantry-item-qty" data-pantry-label="${p.name.toLowerCase()}" data-pantry-category="${pantryProductCategory(p)}">
-      <label class="pantry-name">
-        <input type="checkbox" data-pantry="${key}"> ${p.name}
+  const cats=["all",...new Set(
+    Object.values(PANTRY_CATALOG).map(product=>pantryProductCategory(product))
+  )];
+
+  document.getElementById("pantryCategories").innerHTML=cats.map(cat=>{
+    const label=cat==="all"?"▦ Tutti":(PANTRY_CATEGORY_LABELS[cat]||cat);
+    return `<button type="button"
+      class="pantry-cat ${cat===activePantryCategory?"active":""}"
+      data-pantry-cat="${cat}">${label}</button>`;
+  }).join("");
+
+  grid.innerHTML=sortedPantryEntries().map(([key,product])=>{
+    const unit=pantryDisplayUnit(product);
+    const quantity=quantities[key]??"";
+    const checked=selectedBefore.has(key)?"checked":"";
+    const opened=openedBefore.has(key)?"checked":"";
+
+    return `<div class="pantry-item pantry-item-redesign"
+      data-pantry-label="${product.name.toLowerCase()}"
+      data-pantry-category="${pantryProductCategory(product)}"
+      data-pantry-key="${key}">
+
+      <label class="pantry-check-wrap" aria-label="Seleziona ${product.name}">
+        <input type="checkbox" data-pantry="${key}" ${checked}>
       </label>
-      <div class="pantry-meta">
-        <label class="opened-label"><input type="checkbox" data-opened="${key}"> aperto</label>
-        <input type="number" min="0" step="1" placeholder="${p.unit}" data-pantry-qty="${key}" class="pantry-qty" title="Quantità disponibile">
-      </div>
-    </div>`).join("");
 
-  document.querySelectorAll("[data-pantry-cat]").forEach(btn=>btn.onclick=()=>{
-    activePantryCategory=btn.dataset.pantryCat;
-    document.querySelectorAll("[data-pantry-cat]").forEach(x=>x.classList.toggle("active",x.dataset.pantryCat===activePantryCategory));
-    filterPantry();
+      <div class="pantry-product-icon" aria-hidden="true">${pantryProductIcon(product)}</div>
+
+      <label class="pantry-product-info" for="pantry-qty-${key}">
+        <strong>${product.name}</strong>
+        <span data-pantry-status="${key}">${pantryQuantityText(key,product)}</span>
+      </label>
+
+      <div class="pantry-quantity-control">
+        <input id="pantry-qty-${key}" type="number" min="0" step="1"
+          value="${quantity}" placeholder="0"
+          data-pantry-qty="${key}" class="pantry-qty"
+          title="Quantità disponibile di ${product.name}">
+        <span class="pantry-unit">${unit}</span>
+      </div>
+
+      <label class="opened-label pantry-opened-toggle" title="Prodotto già aperto">
+        <input type="checkbox" data-opened="${key}" ${opened}>
+        <span>Aperto</span>
+      </label>
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll("[data-pantry-cat]").forEach(button=>{
+    button.onclick=()=>{
+      activePantryCategory=button.dataset.pantryCat;
+      document.querySelectorAll("[data-pantry-cat]").forEach(item=>
+        item.classList.toggle("active",item.dataset.pantryCat===activePantryCategory)
+      );
+      filterPantry();
+    };
   });
-  const openedSet=new Set(openedPantryItems());
-  document.querySelectorAll("[data-opened]").forEach(x=>{
-    x.checked=openedSet.has(x.dataset.opened);
-    x.onchange=()=>{
+
+  document.querySelectorAll("[data-opened]").forEach(input=>{
+    input.onchange=()=>{
       const current=new Set(openedPantryItems());
-      if(x.checked) current.add(x.dataset.opened);
-      else current.delete(x.dataset.opened);
+      if(input.checked) current.add(input.dataset.opened);
+      else current.delete(input.dataset.opened);
       saveOpenedPantry([...current]);
     };
   });
-  document.querySelectorAll("[data-pantry]").forEach(x=>x.onchange=()=>{updatePantryCount();saveSettings()});
+
+  document.querySelectorAll("[data-pantry]").forEach(input=>{
+    input.onchange=()=>{
+      updatePantryCount();
+      saveSettings();
+      input.closest(".pantry-item")?.classList.toggle("is-selected",input.checked);
+    };
+    input.closest(".pantry-item")?.classList.toggle("is-selected",input.checked);
+  });
+
   renderPantryQuantityInputs();
-  document.querySelectorAll("[data-cat]").forEach(x=>x.onchange=saveSettings);
+  filterPantry();
+
+  document.querySelectorAll("[data-cat]").forEach(input=>input.onchange=saveSettings);
 }
 
 function filterPantry(){
@@ -96,7 +204,7 @@ function updatePantryCount(){
   const count=new Set([...selected,...Object.keys(quantities).filter(k=>(parseFloat(quantities[k])||0)>0)]).size;
 
   document.getElementById("pantryCount").textContent=
-    `${count} prodott${count===1?"o":"i"} disponibili · ${quantified} con quantità`;
+    `📦 ${count} prodott${count===1?"o":"i"} in dispensa${quantified?` · ${quantified} con quantità`:""}`;
 }
 function recipeAllowed(r,cats,style,season,prefs){
   const seasonMatch=season==="inverno" ? true : r.season.includes("estate");
@@ -221,17 +329,25 @@ function renderPantryQuantityInputs(){
     const key=input.dataset.pantryQty;
     input.value=quantities[key] ?? "";
 
-    input.onchange=()=>{
+    const update=()=>{
       setPantryQuantity(key,input.value);
 
       const checkbox=document.querySelector(`[data-pantry="${key}"]`);
       if(checkbox && parseFloat(input.value)>0){
         checkbox.checked=true;
+        checkbox.closest(".pantry-item")?.classList.add("is-selected");
       }
+
+      const product=PANTRY_CATALOG[key]||PRODUCTS[key]||{name:key};
+      const status=document.querySelector(`[data-pantry-status="${key}"]`);
+      if(status) status.textContent=pantryQuantityText(key,product);
 
       updatePantryCount();
       saveSettings();
     };
+
+    input.onchange=update;
+    input.oninput=update;
   });
 }
 
@@ -4517,6 +4633,7 @@ window.addEventListener("load",()=>{
  updateQuickSummary();
  updatePantryCount();
  document.getElementById("pantrySearch").addEventListener("input",filterPantry);
+document.getElementById("pantrySort").addEventListener("change",renderPantry);
  document.getElementById("recipeSearch").addEventListener("input",renderRecipeLibrary);
  document.getElementById("showFavoritesBtn").onclick=()=>{
    showOnlyFavorites=!showOnlyFavorites;

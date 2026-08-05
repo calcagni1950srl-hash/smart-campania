@@ -1378,3 +1378,331 @@ main.card{
     gap:5px;
   }
 }
+
+
+/* Versione 13.6 — pannello Dispensa ridisegnato */
+.pantry-panel{
+  overflow:visible;
+}
+
+.pantry-panel > summary{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:.9rem;
+}
+
+.pantry-summary-icon{
+  font-size:.9rem;
+}
+
+.pantry-toolbar-redesign{
+  grid-template-columns:1fr;
+  gap:8px;
+  margin-top:11px;
+}
+
+.pantry-search-wrap{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-height:42px;
+  padding:0 11px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+}
+
+.pantry-search-wrap > span{
+  flex:0 0 auto;
+  font-size:1.2rem;
+  color:var(--muted);
+}
+
+.pantry-search-wrap .pantry-search{
+  width:100%;
+  min-width:0;
+  padding:9px 0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+
+.pantry-search-wrap .pantry-search:focus{
+  outline:none;
+}
+
+.pantry-actions{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:7px;
+}
+
+.pantry-actions .small-btn{
+  min-height:38px;
+  padding:8px 10px;
+  white-space:nowrap;
+}
+
+.pantry-categories{
+  margin-top:4px;
+  padding:7px 0 5px;
+  scrollbar-width:thin;
+}
+
+.pantry-cat{
+  min-height:34px;
+  padding:7px 11px;
+  border:1px solid transparent;
+}
+
+.pantry-cat.active{
+  box-shadow:0 4px 12px rgba(35,84,57,.15);
+}
+
+.pantry-list-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin:6px 0 8px;
+}
+
+.pantry-count{
+  min-width:0;
+  margin:0;
+  font-size:.76rem;
+  line-height:1.25;
+}
+
+.pantry-sort-label{
+  display:flex;
+  align-items:center;
+  gap:5px;
+  flex:0 0 auto;
+  margin:0;
+  color:var(--muted);
+  font-size:.7rem;
+}
+
+.pantry-sort{
+  width:auto;
+  min-width:88px;
+  padding:6px 7px;
+  border-radius:9px;
+  font-size:.72rem;
+  background:#fff;
+}
+
+.pantry-list{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  max-height:390px;
+  margin-top:0;
+  padding:2px 4px 2px 0;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
+
+.pantry-item-redesign{
+  display:grid;
+  grid-template-columns:22px 38px minmax(0,1fr) 92px;
+  grid-template-areas:
+    "check icon info quantity"
+    "check icon opened quantity";
+  align-items:center;
+  column-gap:8px;
+  row-gap:3px;
+  min-height:72px;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  transition:border-color .15s ease,background .15s ease,box-shadow .15s ease;
+}
+
+.pantry-item-redesign:hover{
+  border-color:#b9cfc0;
+}
+
+.pantry-item-redesign.is-selected{
+  border-color:#9fc3aa;
+  background:#f7fbf8;
+  box-shadow:0 3px 10px rgba(35,84,57,.06);
+}
+
+.pantry-check-wrap{
+  grid-area:check;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0;
+}
+
+.pantry-check-wrap input{
+  width:17px;
+  height:17px;
+  margin:0;
+}
+
+.pantry-product-icon{
+  grid-area:icon;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  background:#f5f2e9;
+  font-size:1.25rem;
+}
+
+.pantry-product-info{
+  grid-area:info;
+  display:block;
+  min-width:0;
+  margin:0;
+  cursor:pointer;
+}
+
+.pantry-product-info strong{
+  display:block;
+  overflow:hidden;
+  color:var(--text);
+  font-size:.8rem;
+  line-height:1.18;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.pantry-product-info span{
+  display:block;
+  margin-top:3px;
+  overflow:hidden;
+  color:var(--muted);
+  font-size:.68rem;
+  line-height:1.2;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.pantry-quantity-control{
+  grid-area:quantity;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  overflow:hidden;
+  min-height:38px;
+  border:1px solid #a9c8b1;
+  border-radius:9px;
+  background:#fff;
+}
+
+.pantry-quantity-control .pantry-qty{
+  width:100%;
+  min-width:0;
+  padding:8px 5px 8px 9px;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  font-size:.78rem;
+  font-weight:800;
+  box-shadow:none;
+}
+
+.pantry-quantity-control .pantry-qty:focus{
+  outline:none;
+}
+
+.pantry-unit{
+  max-width:38px;
+  padding:0 7px 0 2px;
+  overflow:hidden;
+  color:var(--muted);
+  font-size:.67rem;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.pantry-opened-toggle{
+  grid-area:opened;
+  display:flex;
+  align-items:center;
+  gap:4px;
+  width:max-content;
+  margin:0;
+  color:var(--muted);
+  font-size:.64rem;
+}
+
+.pantry-opened-toggle input{
+  width:13px;
+  height:13px;
+  margin:0;
+}
+
+.pantry-tip{
+  display:flex;
+  gap:9px;
+  margin-top:10px;
+  padding:10px;
+  border:1px solid #c7dccd;
+  border-radius:11px;
+  background:#f1f8f3;
+}
+
+.pantry-tip-icon{
+  flex:0 0 auto;
+}
+
+.pantry-tip strong{
+  display:block;
+  color:var(--primary);
+  font-size:.75rem;
+}
+
+.pantry-tip p{
+  margin:3px 0 0;
+  color:var(--muted);
+  font-size:.68rem;
+  line-height:1.35;
+}
+
+@media(max-width:520px){
+  .pantry-actions{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .pantry-list-header{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .pantry-sort-label{
+    width:100%;
+    justify-content:space-between;
+  }
+
+  .pantry-sort{
+    flex:1;
+  }
+
+  .pantry-item-redesign{
+    grid-template-columns:21px 36px minmax(0,1fr);
+    grid-template-areas:
+      "check icon info"
+      "check icon opened"
+      "quantity quantity quantity";
+    min-height:96px;
+  }
+
+  .pantry-quantity-control{
+    margin-top:5px;
+  }
+
+  .pantry-product-info strong,
+  .pantry-product-info span{
+    white-space:normal;
+  }
+}
