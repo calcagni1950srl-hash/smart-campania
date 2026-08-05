@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Campania Budget Pro</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="brand">
+      <h1>Smart Campania Budget Pro</h1>
+      <p>Menu, spesa e ricette in pochi tocchi</p>
+    </div>
+    <div class="version">Versione 10.3 frutta nelle categorie</div>
+  </div>
+
+  <div class="grid">
+    <aside class="card">
+      <div class="home-hero">
+        <div>
+          <span class="eyebrow">PIANIFICAZIONE SETTIMANALE</span>
+          <h2>Crea il tuo menu</h2>
+          <p>Imposta pochi dati e lascia lavorare Chef AI.</p>
+        </div>
+        <div class="hero-icon">🍋</div>
+      </div>
+
+      <div class="quick-status">
+        <div class="quick-card"><small>Budget</small><strong id="quickBudget">€70</strong></div>
+        <div class="quick-card"><small>Persone</small><strong id="quickPeople">2</strong></div>
+        <div class="quick-card"><small>Stagione</small><strong id="quickSeason">Inverno</strong></div>
+      </div>
+
+      <div class="mobile-summary">Le impostazioni avanzate restano disponibili ma richiuse.</div>
+
+      <div class="compact-grid">
+        <div class="field supermarket-field">
+          <label for="supermarket">Supermercato</label>
+
+          <select id="supermarket" class="hidden-market-select" aria-hidden="true" tabindex="-1">
+            <option value="conad">Conad</option>
+            <option value="lidl">Lidl</option>
+            <option value="eurospin">Eurospin</option>
+            <option value="sole365">Sole 365</option>
+            <option value="piccolo">Supermercati Piccolo</option>
+            <option value="deco">Decò</option>
+          </select>
+
+          <button type="button" class="market-picker-button" id="openMarketPicker">
+            <span class="market-picker-current">
+              <img id="selectedMarketLogo" src="https://upload.wikimedia.org/wikipedia/commons/c/cf/Italian_Conad_Logo_Italia.png" alt="Logo Conad">
+              <span>
+                <small>Supermercato scelto</small>
+                <strong id="selectedMarketName">Conad</strong>
+              </span>
+            </span>
+            <span class="market-picker-arrow">›</span>
+          </button>
+        </div>
+
+        <div class="field">
+          <label for="budget">Budget €</label>
+          <input id="budget" type="number" oninput="saveSettings()" min="10" step="1" value="70">
+        </div>
+
+        <div class="field">
+          <label for="people">Persone</label>
+          <input id="people" type="number" oninput="saveSettings()" min="1" max="10" value="2">
+        </div>
+
+        <div class="field">
+          <label for="season">Stagione</label>
+          <select id="season" onchange="saveSettings()">
+            <option value="estate">Estate ☀️</option>
+            <option value="inverno" selected>Inverno ❄️</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="style">Tipo cucina</label>
+          <select id="style" onchange="saveSettings()">
+            <option value="veloce">Veloce</option>
+            <option value="normale" selected>Normale</option>
+            <option value="gourmet">Gourmet</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="lunch">Pranzo</label>
+          <select id="lunch" onchange="saveSettings()">
+            <option value="primo">Solo primo</option>
+            <option value="secondo">Solo secondo</option>
+            <option value="entrambi">Primo e secondo</option>
+            <option value="primo_contorno">Primo e contorno</option>
+            <option value="secondo_contorno">Secondo e contorno</option>
+            <option value="completo">Primo, secondo e contorno</option>
+            <option value="fuori">Fuori casa</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="dinner">Cena</label>
+          <select id="dinner" onchange="saveSettings()">
+            <option value="primo">Solo primo</option>
+            <option value="secondo" selected>Solo secondo</option>
+            <option value="entrambi">Primo e secondo</option>
+            <option value="primo_contorno">Primo e contorno</option>
+            <option value="secondo_contorno">Secondo e contorno</option>
+            <option value="completo">Primo, secondo e contorno</option>
+            <option value="fuori">Fuori casa</option>
+          </select>
+        </div>
+      </div>
+
+      <details class="advanced-box">
+        <summary>Categorie alimentari</summary>
+        <div class="checks" style="margin-top:10px">
+          <label class="check"><input type="checkbox" data-cat="pasta" checked> Pasta</label>
+          <label class="check"><input type="checkbox" data-cat="carne" checked> Carne</label>
+          <label class="check"><input type="checkbox" data-cat="pesce" checked> Pesce</label>
+          <label class="check"><input type="checkbox" data-cat="verdure" checked> Verdure</label>
+          <label class="check"><input type="checkbox" data-cat="frutta" checked> Frutta</label>
+          <label class="check"><input type="checkbox" data-cat="legumi" checked> Legumi</label>
+          <label class="check"><input type="checkbox" data-cat="latticini" checked> Latticini</label>
+        </div>
+      </details>
+
+      <details class="advanced-box">
+        <summary>Preferenze alimentari</summary>
+        <div class="prefs-grid">
+          <label class="pref-item"><input type="checkbox" id="avoid-fish"> Evita pesce</label>
+          <label class="pref-item"><input type="checkbox" id="avoid-meat"> Evita carne</label>
+          <label class="pref-item"><input type="checkbox" id="avoid-legumes"> Evita legumi</label>
+          <label class="pref-item"><input type="checkbox" id="avoid-dairy"> Evita latticini</label>
+        </div>
+      </details>
+
+      <details class="advanced-box">
+        <summary>Dispensa di casa</summary>
+        <div class="pantry-toolbar">
+          <input id="pantrySearch" class="pantry-search" type="search" placeholder="Cerca prodotto...">
+          <div class="pantry-actions">
+            <button type="button" class="small-btn" id="selectVisiblePantry">Seleziona</button>
+            <button type="button" class="small-btn" id="clearPantry">Azzera</button>
+          </div>
+        </div>
+        <div class="pantry-categories" id="pantryCategories"></div>
+        <div class="pantry-count" id="pantryCount">0 prodotti selezionati</div>
+        <div class="pantry-grid" id="pantryGrid"></div>
+      </details>
+
+      <div class="main-action">
+        <button class="primary primary-xl" id="generateBtn"><span>Genera il menu</span><small>7 giorni su misura</small></button>
+        <button class="surprise-btn" id="surpriseBtn" type="button">✨ Sorprendimi con un menu diverso</button>
+      </div>
+      <button class="secondary" style="width:100%;margin-top:8px" id="resetBtn">Ripristina impostazioni</button>
+      <div class="footer-note">I prezzi sono stime indicative e possono variare.</div>
+    </aside>
+
+    <main>
+      <div class="notice">Puoi cambiare un singolo pranzo, una singola cena o un’intera giornata senza modificare il resto della settimana.</div>
+
+      <div class="kpis">
+        <div class="kpi"><small>Budget</small><strong id="kBudget">€ 0,00</strong></div>
+        <div class="kpi"><small>Spesa stimata</small><strong id="kSpent">€ 0,00</strong></div>
+        <div class="kpi"><small>Residuo</small><strong id="kLeft">€ 0,00</strong></div>
+        <div class="kpi"><small>Pasti pianificati</small><strong id="kMeals">0</strong></div>
+      </div>
+
+      <div class="card">
+        <div class="progress"><div id="budgetBar"></div></div>
+        <div class="tabs">
+          <button class="tab active" data-tab="shopping">Spesa</button>
+          <button class="tab" data-tab="menu">Menu</button>
+          <button class="tab" data-tab="stats">Riepilogo</button>
+          <button class="tab" data-tab="recipes">Ricette</button>
+        </div>
+        <div class="result-actions">
+          <button class="secondary" id="printShoppingBtn" type="button">Stampa spesa</button>
+          <button class="secondary" id="printMenuBtn" type="button">Stampa menu</button>
+        </div>
+
+        <section id="shopping" class="panel active"><div class="empty">Premi “Genera piano settimanale”.</div></section>
+        <section id="menu" class="panel"><div class="empty">Il menu apparirà qui.</div></section>
+        <section id="stats" class="panel"><div class="empty">Il riepilogo apparirà qui.</div></section>
+        <section id="recipes" class="panel">
+          <div class="recipe-tools">
+            <input id="recipeSearch" class="recipe-search" type="search" placeholder="Cerca una ricetta o un ingrediente...">
+            <button type="button" class="secondary" id="showFavoritesBtn">Solo preferiti</button>
+          </div>
+          <div id="recipeLibrary"></div>
+        </section>
+
+        <details class="advanced-results">
+          <summary>Dettagli avanzati</summary>
+          <div class="advanced-result-nav">
+            <button type="button" class="detail-tab active" data-detail="leftovers">Scorte</button>
+            <button type="button" class="detail-tab" data-detail="expiry">Priorità</button>
+            <button type="button" class="detail-tab" data-detail="prep">Preparazione</button>
+            <button type="button" class="detail-tab" data-detail="history">Cronologia</button>
+          </div>
+          <section id="leftovers" class="detail-panel active"><div class="empty">Le scorte residue appariranno qui.</div></section>
+          <section id="expiry" class="detail-panel"><div class="empty">Le priorità di consumo appariranno qui.</div></section>
+          <section id="prep" class="detail-panel"><div class="empty">Il piano di preparazione apparirà qui.</div></section>
+          <section id="history" class="detail-panel"><div class="empty">La cronologia apparirà qui.</div></section>
+        </details>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="recipeModal">
+  <div class="modal-box">
+    <button class="close" id="closeModal">&times;</button>
+    <div class="modal-recipe-hero">
+      <div class="modal-recipe-icon" id="modalRecipeIcon">🍽️</div>
+      <div>
+        <span class="badge" id="modalType">Ricetta</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalDescription" class="modal-description"></p>
+      </div>
+    </div>
+    <div class="kpis" style="grid-template-columns:repeat(4,1fr);margin-top:12px">
+      <div class="kpi"><small>Tempo</small><strong id="modalTime">--</strong></div>
+      <div class="kpi"><small>Difficoltà</small><strong id="modalDifficulty">--</strong></div>
+      <div class="kpi"><small>Porzioni</small><strong id="modalPortions">--</strong></div>
+      <div class="kpi"><small>Costo stimato</small><strong id="modalCost">--</strong></div>
+    </div>
+    <div class="kpis" style="grid-template-columns:1fr">
+      <div class="kpi"><small>Livello di sazietà</small><strong id="modalSatiety">--</strong></div>
+    </div>
+    <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi"><small>Calorie</small><strong id="modalKcal">--</strong></div>
+      <div class="kpi"><small>Proteine</small><strong id="modalProtein">--</strong></div>
+      <div class="kpi"><small>Carboidrati</small><strong id="modalCarbs">--</strong></div>
+      <div class="kpi"><small>Grassi</small><strong id="modalFat">--</strong></div>
+    </div>
+    <h3 class="modal-section-title">Ingredienti</h3>
+    <ul id="modalIngredients"></ul>
+    <h3 class="modal-section-title">Procedimento</h3>
+    <ol id="modalSteps"></ol>
+    <h3 class="modal-section-title">Consiglio dello chef</h3>
+    <div class="notice" id="modalTip"></div>
+  </div>
+</div>
+
+<script src="products.js"></script>
+<script src="recipes.js"></script>
+<script src="app.js"></script>
+
+<div class="market-modal" id="marketModal" aria-hidden="true">
+  <div class="market-modal-backdrop" data-close-market></div>
+
+  <div class="market-modal-sheet" role="dialog" aria-modal="true" aria-labelledby="marketModalTitle">
+    <div class="market-modal-head">
+      <div>
+        <small>SELEZIONA</small>
+        <h2 id="marketModalTitle">Supermercato</h2>
+      </div>
+      <button type="button" class="market-modal-close" data-close-market aria-label="Chiudi">×</button>
+    </div>
+
+    <div class="market-modal-list">
+      <button type="button" class="market-modal-option active" data-market-choice="conad">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/c/cf/Italian_Conad_Logo_Italia.png" alt="Logo Conad">
+        <span>Conad</span>
+        <b>✓</b>
+      </button>
+
+      <button type="button" class="market-modal-option" data-market-choice="lidl">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Lidl-Logo.svg" alt="Logo Lidl">
+        <span>Lidl</span>
+        <b>✓</b>
+      </button>
+
+      <button type="button" class="market-modal-option" data-market-choice="eurospin">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/5/57/Eurospin_New_Logo.svg" alt="Logo Eurospin">
+        <span>Eurospin</span>
+        <b>✓</b>
+      </button>
+
+      <button type="button" class="market-modal-option" data-market-choice="sole365">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/ff/Sole-365-logo.png" alt="Logo Sole 365">
+        <span>Sole 365</span>
+        <b>✓</b>
+      </button>
+
+      <button type="button" class="market-modal-option" data-market-choice="piccolo">
+        <img src="https://www.gruppovege.it/uploads/brands/1495641488-5fbd5b66847f0.jpeg" alt="Logo Supermercati Piccolo">
+        <span>Supermercati Piccolo</span>
+        <b>✓</b>
+      </button>
+
+      <button type="button" class="market-modal-option" data-market-choice="deco">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/3/35/Logo_dec%C3%B2.png" alt="Logo Decò">
+        <span>Decò</span>
+        <b>✓</b>
+      </button>
+    </div>
+
+    <p class="market-modal-note">I loghi vengono caricati da Internet. La selezione resta funzionante anche se un logo non viene visualizzato.</p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,170 @@
+SMART CAMPANIA BUDGET PRO — VERSIONE 8.1
+
+FILE
+- index.html: schermata dell'app
+- styles.css: grafica e adattamento smartphone
+- products.js: prodotti, prezzi medi, dispensa, confezioni e dati nutrizionali
+- recipes.js: database delle ricette campane e mediterranee
+- app.js: motore Chef, budget, menu, cronologia e interazioni
+
+COME PROVARLA
+1. Estrai lo ZIP.
+2. Mantieni tutti i file nella stessa cartella.
+3. Apri index.html con Chrome o Edge.
+
+PERCHÉ QUESTA STRUTTURA È MIGLIORE
+- Le ricette possono essere ampliate senza toccare il motore.
+- I prodotti e i prezzi possono essere aggiornati separatamente.
+- Gli errori sono più facili da individuare.
+- La base è pronta per una futura versione installabile sul telefono.
+
+IMPORTANTE
+Non rinominare o spostare singolarmente i file.
+
+
+NOVITÀ VERSIONE 8.2
+- Database ampliato con 60 nuove ricette.
+- 20 nuovi primi.
+- 20 nuovi secondi.
+- 20 nuovi contorni.
+- Tutte le nuove ricette usano ingredienti già gestiti dal motore.
+- Compatibilità mantenuta con stagione, stile, budget, nutrizione e dispensa.
+
+
+NOVITÀ VERSIONE 9.0 — CHEF AI 3.0
+- Priorità agli ingredienti già aperti e più deperibili.
+- Chef Score da 0 a 100.
+- Valutazione separata di budget, varietà, riutilizzo e sprechi.
+- Spiegazione del motivo per cui ogni ricetta è stata scelta.
+- Possibilità di segnare un prodotto della dispensa come già aperto.
+- Ricalcolo automatico del punteggio dopo le modifiche manuali.
+
+
+CORREZIONE VERSIONE 9.1
+- Il pulsante “Aggiungi scorte alla dispensa” aggiorna subito le caselle.
+- Il contatore dei prodotti selezionati viene aggiornato immediatamente.
+- Il trasferimento funziona anche senza impostazioni precedentemente salvate.
+- Le selezioni restano memorizzate dopo la chiusura dell’app.
+
+
+NOVITÀ VERSIONE 9.2 — DISPENSA QUANTITATIVA
+- Puoi inserire la quantità disponibile per ogni prodotto.
+- Il motore sottrae automaticamente le quantità presenti in casa.
+- La lista della spesa include solo ciò che manca davvero.
+- Le scorte residue trasferite mantengono anche la quantità.
+- Nel riepilogo vedi quanto è stato usato dalla dispensa.
+- Compatibilità mantenuta con il vecchio sistema di selezione semplice.
+
+
+NOVITÀ VERSIONE 9.3 — CONFERMA DISPENSA
+- Pulsante per confermare il menu settimanale.
+- Le quantità usate vengono sottratte davvero dalla dispensa.
+- Protezione contro la doppia sottrazione.
+- Possibilità di annullare e ripristinare le quantità.
+- Le modifiche manuali al menu annullano automaticamente la conferma precedente.
+
+
+NOVITÀ VERSIONE 9.4 — PRIORITÀ E SCADENZE
+- I pasti con ingredienti aperti o molto deperibili vengono anticipati.
+- Nuova sezione “Priorità consumo”.
+- Indicazione del primo giorno di utilizzo previsto.
+- Avviso per prodotti deperibili presenti in dispensa ma non usati nel menu.
+- Riepilogo del numero di prodotti prioritari e a rischio spreco.
+
+
+NOVITÀ VERSIONE 9.5 — BATCH COOKING
+- Nuova sezione “Prepara in anticipo”.
+- Individua ingredienti usati in più ricette.
+- Raggruppa le preparazioni per giorno.
+- Mostra quantità totali e giorni di utilizzo.
+- Stima il tempo risparmiato.
+- Fornisce indicazioni generali di conservazione.
+
+
+NOVITÀ VERSIONE 9.6 — INTERFACCIA SNELLA
+- Solo quattro schede principali: Spesa, Menu, Riepilogo e Ricette.
+- Scorte, priorità, preparazione e cronologia raccolte in “Dettagli avanzati”.
+- Pulsanti di stampa separati dalle schede.
+- Riepilogo ripulito dalle voci ridondanti.
+- Comandi del menu abbreviati per lo smartphone.
+- Nessuna funzione rimossa.
+
+
+NOVITÀ VERSIONE 10.0 — RESTYLING MOBILE
+- Nuova identità visiva.
+- Home con riepilogo rapido.
+- Pulsante principale più grande.
+- Schede menu più moderne.
+- Animazioni leggere.
+- Migliore leggibilità su smartphone.
+- Motore Chef AI invariato.
+
+
+NOVITÀ VERSIONE 10.1 — CATEGORIA FRUTTA
+- Nuova categoria “Frutta” nella dispensa.
+- 21 tipi di frutta fresca.
+- 5 tipi di frutta secca.
+- Quantità disponibili in grammi.
+- Durata stimata e priorità di consumo.
+- Possibilità di segnare come aperte le confezioni di frutta secca.
+
+
+CORREZIONE VERSIONE 10.2
+- La categoria “🍎 Frutta” compare realmente nel pannello della dispensa.
+- La categoria è posizionata tra Verdura e Carne.
+- Tutti i 26 prodotti della frutta vengono mostrati correttamente.
+- Ricerca, contatore, quantità e stato “aperto” restano funzionanti.
+
+
+CORREZIONE VERSIONE 10.3
+- Aggiunta la voce Frutta anche nelle Categorie alimentari.
+- La selezione viene salvata e ripristinata insieme alle altre categorie.
+- La categoria resta distinta dalla sezione Frutta della dispensa.
+
+
+NOVITÀ VERSIONE 10.4 — FRUTTA NEL MENU
+- Se “Frutta” è selezionata, viene aggiunta automaticamente a fine pranzo e cena.
+- La scelta rispetta la stagione.
+- La frutta viene alternata durante la settimana.
+- Viene usata prima quella disponibile in dispensa.
+- La frutta mancante entra nella lista della spesa e nel budget.
+- Calorie e valori nutrizionali vengono inclusi nel riepilogo.
+
+
+NOVITÀ VERSIONE 10.5 — VARIETÀ INTELLIGENTE
+- Chef AI confronta la somiglianza reale tra ricette.
+- Evita sequenze come pasta e fagioli, pasta e ceci e pasta e lenticchie.
+- Alterna meglio carne, pesce, legumi, riso e pasta.
+- Riduce contorni troppo simili nei giorni vicini.
+- Migliora la rotazione della frutta.
+- Anche il cambio della singola ricetta considera i piatti dei giorni vicini.
+- Nuovo punteggio “Varietà reale del menu”.
+
+
+NOVITÀ VERSIONE 10.6 — GRAFICA RICETTE
+- Ricettario trasformato in card moderne.
+- Colore e icona diversi per primi, secondi, contorni e frutta.
+- Tempo, difficoltà, sazietà e valori nutrizionali visibili subito.
+- Pulsante preferiti più chiaro.
+- Modal ricetta più elegante e leggibile.
+- Ingredienti organizzati in griglia.
+- Procedimento più ordinato.
+- Migliore visualizzazione delle ricette nel menu settimanale.
+- Nessuna modifica al motore Chef AI.
+
+
+NOVITÀ VERSIONE 10.7 — LOGHI SUPERMERCATI
+- Logo visibile accanto al nome del supermercato selezionato.
+- Il logo cambia automaticamente quando scegli una catena diversa.
+- Supportati Conad, Lidl, Eurospin, Sole 365, Supermercati Piccolo e Decò.
+- I loghi sono incorporati nel codice e funzionano anche offline.
+- Nessuna modifica al motore Chef AI.
+
+
+CORREZIONE VERSIONE 10.9 — SELETTORE SUPERMERCATI STABILE
+- Eliminata la tendina personalizzata che poteva bloccarsi.
+- Nuovo selettore a finestra con logo reale e nome.
+- Su smartphone si apre dal basso come nelle app moderne.
+- Tocchi il supermercato e la finestra si chiude automaticamente.
+- Il valore continua a essere usato da prezzi, budget e lista della spesa.
+- Se un logo web non si carica, la selezione continua comunque a funzionare.
