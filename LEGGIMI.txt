@@ -255,3 +255,13 @@ VERSIONE 11.6.5 — MENU BUDGET REALE
 - La frutta compare una volta al giorno se selezionata.
 - La frutta utilizza poche varietà economiche per evitare confezioni inutili.
 - I contorni aggiuntivi vengono eliminati solo come ultimo intervento.
+
+
+VERSIONE 11.6.6 — STRUTTURA PASTI CORRETTA
+- Il pranzo rispetta esattamente il tipo scelto nella tendina.
+- La cena rispetta esattamente il tipo scelto nella tendina.
+- Il menu economico non alterna più primi e secondi ignorando le impostazioni.
+- Carne e pesce vengono inseriti solo nei pasti che prevedono un secondo.
+- Le ricette vengono scelte senza duplicati finché il database offre alternative.
+- Migliorata la distanza tra piatti simili.
+- Controllo finale automatico della struttura pranzo/cena.
